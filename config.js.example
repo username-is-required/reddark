@@ -1,4 +1,4 @@
 module.exports = {
     port: 3212,
-    updateInterval: 30000
+    updateInterval: 5000
 }
