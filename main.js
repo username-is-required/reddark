@@ -7,7 +7,7 @@ var request = require("./requests.js");
 var config = require("./config.js")
 const io = new Server(server, {
     cors: {
-        origin: "https://reddark.untone.uk/",
+        origin: config.url,
         methods: ["GET", "POST"],
         transports: ['websocket', 'polling'],
         credentials: true
