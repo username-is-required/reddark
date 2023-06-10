@@ -147,7 +147,8 @@ async function updateStatus() {
 
 async function run() {
     await createList();
-    setInterval(updateStatus, 30000); // 30 seconds placeholder time
+    updateStatus();
+    setInterval(updateStatus, config.updateInterval); // 30 seconds placeholder time
 }
 
 run();
