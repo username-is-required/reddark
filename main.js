@@ -175,7 +175,7 @@ async function updateStatus() {
 
 async function keepListUpdated() {
     setInterval(() => {
-        
+        // when we get here, it's time to update the list
     }, 10800000); // 3 hours = 10,800,000 secconds
 }
 
