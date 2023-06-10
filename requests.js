@@ -8,7 +8,7 @@ module.exports = {
                 path: url,
                 method: 'GET',
                 headers: {
-                    "User-Agent": "Reddark (https://github.com/Tanza3D/Reddark)",
+                    "User-Agent": "Reddark (https://github.com/username-is-required/Reddark)",
                     'Range': "bytes=0-50"
                 }
             };
