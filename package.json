@@ -1,0 +1,30 @@
+{
+  "name": "Reddark",
+  "description": "Watch the subreddit blackout happen in real time",
+  "contributors": [
+    {
+      "name": "D4llo",
+      "url": "https://github.com/D4llo"
+    },
+    {
+      "name": "Tanza3D",
+      "url": "https://github.com/Tanza3D"
+    },
+    {
+      "name": "username-is-required",
+      "url": "https://github.com/username-is-required"
+    }
+  ],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/username-is-required/Reddark.git"
+  },
+  "license": "AGPL-3.0-only",
+  "dependencies": {
+    "express": "4.18.2",
+    "socket.io": "4.6.2"
+  },
+  "scripts": {
+    "start": "node main.js"
+  }
+}

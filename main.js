@@ -20,6 +20,17 @@ app.get('/', (req, res) => {
 });
 app.use(express.static('public'))
 
+function isJson(item) {
+    let value = typeof item !== "string" ? JSON.stringify(item) : item;
+    try {
+        value = JSON.parse(value);
+    } catch (e) {
+        return false;
+    }
+
+    return typeof value === "object" && value !== null;
+}
+
 const subreddits_src = {
 
 }
@@ -96,6 +107,12 @@ async function updateStatus() {
                 const httpsReq = request.httpsGet("/" + subreddits[section][subreddit].name + ".json").then((data) => {
                     if(data.startsWith("<")) {
                         console.log("Request to Reddit errored - " + data);
+                        // error handling? the app will assume the sub is public
+                        return;
+                    }
+                    
+                    if (!isJson(data)) {
+                        console.log("Request to Reddit errored (not JSON) - " + data);
                         // error handling? the app will assume the sub is public
                         return;
                     }
