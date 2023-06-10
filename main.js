@@ -172,7 +172,15 @@ async function updateStatus() {
         }
     }
 }
+
+async function keepListUpdated() {
+    setInterval(() => {
+        
+    }, 10800000); // 3 hours = 10,800,000 secconds
+}
+
 (async () => {
     await createList();
+    keepListUpdated();
     await updateStatus();
 })();
