@@ -1,10 +1,15 @@
 const express = require('express');
-const app = express();
 const http = require('http');
-const server = http.createServer(app);
 const { Server } = require("socket.io");
+
 var request = require("./requests.js");
 var config = require("./config.js")
+
+// init a server
+const app = express();
+const server = http.createServer(app);
+
+// init the websocket stuff
 const io = new Server(server, {
     cors: {
         origin: config.url,
@@ -15,6 +20,7 @@ const io = new Server(server, {
     allowEIO3: true
 });
 
+// set up the static files - index.html and the public directory
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
@@ -159,14 +165,20 @@ async function updateStatus() {
     }
 }
 
+// this function calls updateStatus to check/update the status of
+// the subreddits, then uses setTimeout to wait for the amount of
+// time specified in the config before the function is called again.
 async function continuouslyUpdate() {
     await updateStatus();
     setTimeout(continuouslyUpdate, config.updateInterval); // interval between updates set in the config file
 }
 
+// builds the list of subreddits, then starts the continuous
+// updating of the subreddit statuses
 async function run() {
     await createList();
     continuouslyUpdate();
 }
+
 
 run();
