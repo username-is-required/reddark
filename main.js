@@ -139,7 +139,7 @@ async function updateStatus() {
     await Promise.all(httpsRequests);
     
     // all requests have now either been completed or errored
-    if (firstCheck) {
+    if (!firstCheck) {
         io.emit("subreddits", subreddits);
         firstCheck = true;
     }
