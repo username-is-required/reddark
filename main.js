@@ -20,17 +20,6 @@ app.get('/', (req, res) => {
 });
 app.use(express.static('public'))
 
-function isJson(item) {
-    let value = typeof item !== "string" ? JSON.stringify(item) : item;
-    try {
-        value = JSON.parse(value);
-    } catch (e) {
-        return false;
-    }
-
-    return typeof value === "object" && value !== null;
-}
-
 const subreddits_src = {
 
 }
@@ -39,7 +28,17 @@ async function appendList(url) {
     var section = [];
     var sectionname = "";
     var data = await request.httpsGet(url);
-    data = JSON.parse(data);
+    
+    try {
+        data = JSON.parse(data);
+    } catch (err) {
+        console.log("Request to Reddit errored (bad JSON) - " + data);
+        // add error handling
+        // maybe set a timeout to try again?
+        // for right now as theres no workaround to continue well just throw it again
+        throw err;
+    }
+    
     text = data[0]['data']['children'][0]['data']['selftext'];
     //console.log(text);
     lines = text.split("\n");
@@ -111,13 +110,14 @@ async function updateStatus() {
                         return;
                     }
                     
-                    if (!isJson(data)) {
-                        console.log("Request to Reddit errored (not JSON) - " + data);
+                    try {
+                        data = JSON.parse(data);
+                    } catch (err) {
+                        console.log("Request to Reddit errored (bad JSON) - " + data);
                         // error handling? the app will assume the sub is public
                         return;
                     }
                     
-                    var resp = JSON.parse(data);
                     if (typeof (resp['message']) != "undefined" && resp['error'] == 500) {
                         console.log("Request to Reddit errored (500) - " + resp);
                         // error handling? the app will assume the sub is public
