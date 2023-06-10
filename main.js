@@ -30,20 +30,36 @@ const subreddits_src = {
 
 }
 const subreddits = {};
+
+// a function to fetch data from a url and validate that it is JSON
+// it is persistent and will keep trying until it gets valid JSON
+async function fetchValidJsonData(url) {
+    return new Promise((resolve, reject) => {
+        var data = await request.httpsGet(url);
+        
+        try {
+            data = JSON.parse(data);
+        } catch (err) {
+            console.log("Request to Reddit errored (bad JSON) [will retry] - " + data);
+            
+            // now we wait for 10 seconds and try it again!
+            // 'resolving' the promise with...uhh, recursion
+            setTimeout(
+                resolve(await fetchValidJsonData(url)),
+                10000
+            );
+        }
+        
+        // if we're here, we have valid json
+        resolve(data);
+    });
+}
+
 async function appendList(url) {
     var section = [];
     var sectionname = "";
-    var data = await request.httpsGet(url);
     
-    try {
-        data = JSON.parse(data);
-    } catch (err) {
-        console.log("Request to Reddit errored (bad JSON) - " + data);
-        // add error handling
-        // maybe set a timeout to try again?
-        // for right now as theres no workaround to continue well just throw it again
-        throw err;
-    }
+    data = await fetchValidJsonData(url);
     
     text = data[0]['data']['children'][0]['data']['selftext'];
     //console.log(text);
