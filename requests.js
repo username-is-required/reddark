@@ -7,7 +7,6 @@ module.exports = {
                 hostname: 'www.reddit.com',
                 path: url,
                 method: 'GET',
-                timeout: 10000,
                 headers: {
                     "User-Agent": "Reddark (https://github.com/Tanza3D/Reddark)",
                     'Range': "bytes=0-50"
