@@ -1,4 +1,5 @@
 module.exports = {
     port: 3212,
+    updateInterval: 5000,
     url: "https://reddark.untone.uk/"
 }

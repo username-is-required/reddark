@@ -1,10 +1,15 @@
 const express = require('express');
-const app = express();
 const http = require('http');
-const server = http.createServer(app);
 const { Server } = require("socket.io");
+
 var request = require("./requests.js");
 var config = require("./config.js")
+
+// init a server
+const app = express();
+const server = http.createServer(app);
+
+// init the websocket stuff
 const io = new Server(server, {
     cors: {
         origin: config.url,
@@ -15,31 +20,47 @@ const io = new Server(server, {
     allowEIO3: true
 });
 
+// set up the static files - index.html and the public directory
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
 });
 app.use(express.static('public'))
 
-function isJson(item) {
-    let value = typeof item !== "string" ? JSON.stringify(item) : item;
-    try {
-        value = JSON.parse(value);
-    } catch (e) {
-        return false;
-    }
-
-    return typeof value === "object" && value !== null;
-}
-
 const subreddits_src = {
 
 }
 const subreddits = {};
+
+// a function to fetch data from a url and validate that it is JSON
+// it is persistent and will keep trying until it gets valid JSON
+async function fetchValidJsonData(url) {
+    return new Promise((resolve, reject) => {
+        var data = await request.httpsGet(url);
+        
+        try {
+            data = JSON.parse(data);
+        } catch (err) {
+            console.log("Request to Reddit errored (bad JSON) [will retry] - " + data);
+            
+            // now we wait for 10 seconds and try it again!
+            // 'resolving' the promise with...uhh, recursion
+            setTimeout(
+                resolve(await fetchValidJsonData(url)),
+                10000
+            );
+        }
+        
+        // if we're here, we have valid json
+        resolve(data);
+    });
+}
+
 async function appendList(url) {
     var section = [];
     var sectionname = "";
-    var data = await request.httpsGet(url);
-    data = JSON.parse(data);
+    
+    data = await fetchValidJsonData(url);
+    
     text = data[0]['data']['children'][0]['data']['selftext'];
     //console.log(text);
     lines = text.split("\n");
@@ -97,73 +118,83 @@ server.listen(config.port, () => {
 var checkCounter = 0;
 
 async function updateStatus() {
-    var new_status = [];
-    var todo = 0;
-    var done = 0;
-    var finished = false;
-    const stackTrace = new Error().stack
-    checkCounter++;
-    var doReturn = false;
-    console.log("Starting check " + checkCounter + " with stackTrace: " + stackTrace);
-    for (let section in subreddits) {
-        for (let subreddit in subreddits[section]) {
-            if (doReturn) return;
-            todo++;
-            function stop() {
-                setTimeout(() => {
-                    updateStatus();
-                }, 10000);
-                doReturn = true;
-            }
-            request.httpsGet("/" + subreddits[section][subreddit].name + ".json").then(function (data) {
-                if (doReturn) return;
-                //console.log("checked " + subreddits[section][subreddit].name)
-                
-                if (data.startsWith("<")) {
-                    console.log("We're probably getting blocked... - " + data);
-                    stop();
-                    return;
-                }
-                if(!isJson(data)) {
-                    console.log("Response is not JSON? We're probably getting blocked... - " + data);
-                    stop();
-                    return;
-                }
-                var resp = JSON.parse(data);
-                if (typeof (resp['message']) != "undefined" && resp['error'] == 500) {
-                    console.log("We're probably getting blocked... (500) - " + resp);
-                    stop();
-                    return;
-                }
-                if (typeof (resp['reason']) != "undefined" && resp['reason'] == "private" && subreddits[section][subreddit].status != "private") {
-                    //console.log(subreddits[section][subreddit].status);
-                    subreddits[section][subreddit].status = "private";
-                    if (firstCheck == false)
-                        io.emit("update", subreddits[section][subreddit]);
-                    else
+    return new Promise((resolve, reject) => {
+        var httpsRequests = [];
+        const stackTrace = new Error().stack
+        checkCounter++;
+        console.log("Starting check " + checkCounter + " with stackTrace: " + stackTrace);
+        for (let section in subreddits) {
+            for (let subreddit in subreddits[section]) {
+                const httpsReq = request.httpsGet("/" + subreddits[section][subreddit].name + ".json").then((data) =
+                    try {
+                        data = JSON.parse(data);
+                    } catch (err) {
+                        console.log("Request to Reddit errored (bad JSON) - " + data);
+                        // error handling? the app will assume the sub is public
+                        return;
+                    }
+                    
+                    if (typeof (resp['message']) != "undefined" && resp['error'] == 500) {
+                        console.log("Request to Reddit errored (500) - " + resp);
+                        // error handling? the app will assume the sub is public
+                        return;
+                    }
+                    
+                    if (typeof (resp['reason']) != "undefined" && resp['reason'] == "private" && subreddits[section][subreddit].status != "private") {
+                        // the subreddit is private and the app doesn't know about it yet
+                        subreddits[section][subreddit].status = "private";
+                        if (firstCheck == false) {
+                            io.emit("update", subreddits[section][subreddit]);
+                        } else {
+                            io.emit("updatenew", subreddits[section][subreddit]);
+                        }
+                    } else if (subreddits[section][subreddit].status == "private" && typeof (resp['reason']) == "undefined") {
+                        // the subreddit is public but the app thinks it's private
+                        console.log("updating to public with data - " + resp);
+                        subreddits[section][subreddit].status = "public";
                         io.emit("updatenew", subreddits[section][subreddit]);
-
-                } else if (subreddits[section][subreddit].status == "private" && typeof (resp['reason']) == "undefined") {
-                    console.log("updating to public with data:")
-                    console.log(resp);
-                    subreddits[section][subreddit].status = "public";
-                    io.emit("updatenew", subreddits[section][subreddit]);
-                }
-                done++;
-                if (done > (todo - 2) && firstCheck == false) {
-                    io.emit("subreddits", subreddits);
-                    firstCheck = true;
-                }
-                if (done == todo) {
-                    updateStatus();
-                    console.log("FINISHED CHECK (or close enough to) - num " + checkCounter);
-                    return;
-                }
-            });
+                    }
+                }).catch((err) => {
+                    if (err.message == "timed out") {
+                        console.log("Request to Reddit timed out");
+                    } else {
+                        console.log("Request to Reddit errored - " + err);
+                    }
+                    
+                    // error handling? the app will assume the sub is public
+                });
+                
+                httpsRequests.push(httpsReq);
+            }
         }
+        
+        await Promise.all(httpsRequests);
+        
+        // all requests have now either been completed or errored
+        if (!firstCheck) {
+            io.emit("subreddits", subreddits);
+            firstCheck = true;
+        }
+        
+        // the updating is now complete, resolve the promise
+        resolve();
     }
 }
-(async () => {
-    await createList();
+
+// this function calls updateStatus to check/update the status of
+// the subreddits, then uses setTimeout to wait for the amount of
+// time specified in the config before the function is called again.
+async function continuouslyUpdate() {
     await updateStatus();
-})();
+    setTimeout(continuouslyUpdate, config.updateInterval); // interval between updates set in the config file
+}
+
+// builds the list of subreddits, then starts the continuous
+// updating of the subreddit statuses
+async function run() {
+    await createList();
+    continuouslyUpdate();
+}
+
+
+run();
