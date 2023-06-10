@@ -94,25 +94,17 @@ async function updateStatus() {
     console.log("Starting check " + checkCounter + " with stackTrace: " + stackTrace);
     for (let section in subreddits) {
         for (let subreddit in subreddits[section]) {
-            const httpsReq = request.httpsGet("/" + subreddits[section][subreddit].name + ".json").then((data) => {
-                //if(doReturn) return;
-                //console.log("checked " + subreddits[section][subreddit].name)
+            const httpsReq = request.httpsGet("/" + subreddits[section][subreddit].name + ".json").then((data) =>
                 if(data.startsWith("<")) {
                     console.log("Request to Reddit errored - " + data);
-                    /*setTimeout(() => {
-                        updateStatus();
-                    }, 10000);
-                    doReturn = true;*/
+                    // error handling? the app will assume the sub is public
                     return;
                 }
                 
                 var resp = JSON.parse(data);
                 if (typeof (resp['message']) != "undefined" && resp['error'] == 500) {
                     console.log("Request to Reddit errored (500) - " + resp);
-                    /*setTimeout(() => {
-                        updateStatus();
-                    }, 10000);
-                    doReturn = true;*/
+                    // error handling? the app will assume the sub is public
                     return;
                 }
 
@@ -131,10 +123,13 @@ async function updateStatus() {
                     io.emit("updatenew", subreddits[section][subreddit]);
                 }
             }).catch((err) => {
-                if (err.message == "timed out")
+                if (err.message == "timed out") {
                     console.log("Request to Reddit timed out");
-                else
+                } else {
                     console.log("Request to Reddit errored - " + err);
+                }
+                
+                // error handling? the app will assume the sub is public
             });
             
             httpsRequests.push(httpsReq);
