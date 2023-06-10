@@ -87,12 +87,12 @@ var checkCounter = 0;
 
 async function updateStatus() {
     var new_status = [];
-    var todo = 0;
-    var done = 0;
+    //var todo = 0;
+    //var done = 0;
     var finished = false;
-    const stackTrace = new Error().stack
+    //const stackTrace = new Error().stack
     checkCounter++;
-    var doReturn = false;
+    //var doReturn = false;
     console.log("Starting check " + checkCounter + " with stackTrace: " + stackTrace);
     for (let section in subreddits) {
         for (let subreddit in subreddits[section]) {
@@ -142,11 +142,19 @@ async function updateStatus() {
                     console.log("FINISHED CHECK (or close enough to) - num " + checkCounter);
                     return;
                 }
+            }).catch((err) => {
+                if (err.message == "timed out")
+                    console.log("Request to Reddit timed out");
+                else
+                    console.log("Request to Reddit errored - " + err);
             });
         }
     }
 }
-(async () => {
+
+async function run() {
     await createList();
-    await updateStatus();
-})();
+    setInterval(updateStatus, 30000); // 30 seconds placeholder time
+}
+
+run();
