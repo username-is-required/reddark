@@ -139,7 +139,7 @@ server.listen(config.port, () => {
 var checkCounter = 0;
 
 function updateStatus() {
-    return new Promise((resolve, reject) => {
+    return new Promise(async (resolve, reject) => {
         var httpsRequests = [];
         const stackTrace = new Error().stack
         checkCounter++;
