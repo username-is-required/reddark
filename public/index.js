@@ -41,6 +41,7 @@ socket.on("update", (data) => {
     updateSubreddit(data);
 })
 socket.on("loading", () => {
+    loaded = false;
     document.getElementById("list").innerHTML = "Server reloading...";
 })
 
