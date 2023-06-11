@@ -30,27 +30,13 @@ socket.on("subreddits", (data) => {
     fillSubredditsList(data);
 })
 
-socket.on("subreddits-refreshed", (data) => {
-    loaded = false;
-    document.getElementById("list").innerHTML = "Loading...";
-    fillSubredditsList(data);
-    newStatusUpdate("List of subreddits updated");
-});
-
 socket.on("update", (data) => {
     updateSubreddit(data);
 })
-
 socket.on("loading", () => {
-    loaded = false;
     document.getElementById("list").innerHTML = "Server reloading...";
 })
 
-// if the subreddit list is being refreshed
-socket.on("refreshing", () => {
-    loaded = false;
-    document.getElementById("list").innerHTML = "Updating list of subreddits..."; 
-});
 
 socket.on('disconnect', function () {
     loaded = false;
@@ -73,31 +59,22 @@ function doScroll(el) {
 }
 function updateSubreddit(data, _new = false) {
     if (!loaded) return;
-    
-    var subredditElement = document.getElementById(data.name);
-    if (subredditElement == null) {
-        // if this happens, the subreddit list has probably been refreshed
-        // but not yet emmitted
-        console.log("Skipped over " + data.name + " going " + data.status + ": not in list");
-        return;
-    }
-    
     if (data.status == "private") {
         if (_new) {
             newStatusUpdate("<strong>" + data.name + "</strong> has gone private!", function () {
-                doScroll(subredditElement);
+                doScroll(document.getElementById(data.name));
             })
             audioSystem.play("privated")
         }
-        subredditElement.classList.add("subreddit-private");
+        document.getElementById(data.name).classList.add("subreddit-private");
     } else {
         if (_new) {
             newStatusUpdate("<strong>" + data.name + "</strong> has gone public.", function () {
-                doScroll(subredditElement);
+                doScroll(document.getElementById(data.name));
             })
             audioSystem.play("public")
         }
-        subredditElement.classList.remove("subreddit-private");
+        document.getElementById(data.name).classList.remove("subreddit-private");
     }
     updateStatusText();
     document.getElementById(data.name).querySelector("p").innerHTML = data.status;
