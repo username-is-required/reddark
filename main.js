@@ -200,9 +200,10 @@ function updateStatus() {
                         } else {
                             io.emit("updatenew", subreddits[section][subreddit]);
                         }
+<<<<<<< HEAD
                         
                     // if restricted
-                    }else if(data.data && data.data.children[0].data.subreddit_type != "public"){
+                    }else if(data.data && data.data.children[0].data.subreddit_type == "restricted" && subreddits[section][subreddit].status != "restricted"){
                         subreddits[section][subreddit].status = "restricted";
                         if (firstCheck == false)
                             io.emit("update", subreddits[section][subreddit]);
