@@ -5,6 +5,13 @@ const { Server } = require("socket.io");
 var request = require("./requests.js");
 var config = require("./config.js")
 
+// helper function to wait for some time before continuing
+function wait(msDelay) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, msDelay);
+    });
+}
+
 // init a server
 const app = express();
 const server = http.createServer(app);
@@ -150,7 +157,7 @@ function updateStatus() {
                     try {
                         data = JSON.parse(data);
                     } catch (err) {
-                        console.log("Request to Reddit errored (bad JSON) - " + data);
+                        console.log("Request to Reddit errored (bad JSON), likely rate limited");
                         // error handling? the app will assume the sub is public
                         return;
                     }
@@ -186,6 +193,9 @@ function updateStatus() {
                 });
                 
                 httpsRequests.push(httpsReq);
+                
+                // wait between requests
+                await wait(1);
             }
         }
         
