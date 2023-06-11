@@ -2,8 +2,8 @@ var audioSystem = {
     playAudio: false,
     
     audio: {
-        madePrivate: new Audio('/audio/privated.mp3');
-        madePublic: new Audio('/audio/public.mp3');
+        madePrivate: new Audio('/audio/privated.mp3'),
+        madePublic: new Audio('/audio/public.mp3')
     },
     
     isPlaying: function(audioObj) {
