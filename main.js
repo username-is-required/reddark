@@ -69,7 +69,7 @@ async function appendList(url) {
             sectionname = line.replace("##", "").replace("/r", "");
         }
         if (line.startsWith("r/")) {
-            section.push(line);
+            section.push(line.replace("/r", ""));
         }
     }
     subreddits_src[sectionname] = section;
