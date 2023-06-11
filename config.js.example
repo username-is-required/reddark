@@ -1,7 +1,7 @@
 module.exports = {
     port: 3212,
-    intervalBetweenRequests: 60,
-    updateInterval: 5000,
-    listRefreshInterval: 10800000,
-    url: "https://reddark.untone.uk/"
+    intervalBetweenRequests: 7,
+    updateInterval: 10000,
+    listRefreshInterval: 1800000,
+    url: "https://reddark-digitalocean-7lhfr.ondigitalocean.app/"
 }
