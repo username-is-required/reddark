@@ -155,13 +155,13 @@ function updateStatus() {
                         return;
                     }
                     
-                    if (typeof (resp['message']) != "undefined" && resp['error'] == 500) {
-                        console.log("Request to Reddit errored (500) - " + resp);
+                    if (typeof (data['message']) != "undefined" && data['error'] == 500) {
+                        console.log("Request to Reddit errored (500) - " + data);
                         // error handling? the app will assume the sub is public
                         return;
                     }
                     
-                    if (typeof (resp['reason']) != "undefined" && resp['reason'] == "private" && subreddits[section][subreddit].status != "private") {
+                    if (typeof (data['reason']) != "undefined" && data['reason'] == "private" && subreddits[section][subreddit].status != "private") {
                         // the subreddit is private and the app doesn't know about it yet
                         subreddits[section][subreddit].status = "private";
                         if (firstCheck == false) {
@@ -169,9 +169,9 @@ function updateStatus() {
                         } else {
                             io.emit("updatenew", subreddits[section][subreddit]);
                         }
-                    } else if (subreddits[section][subreddit].status == "private" && typeof (resp['reason']) == "undefined") {
+                    } else if (subreddits[section][subreddit].status == "private" && typeof (data['reason']) == "undefined") {
                         // the subreddit is public but the app thinks it's private
-                        console.log("updating to public with data - " + resp);
+                        console.log("updating to public with data - " + data);
                         subreddits[section][subreddit].status = "public";
                         io.emit("updatenew", subreddits[section][subreddit]);
                     }
