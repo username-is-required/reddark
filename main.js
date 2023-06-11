@@ -74,7 +74,8 @@ async function appendList(url) {
     }
     subreddits_src[sectionname] = section;
 }
-async function createList() {
+
+async function createList(previousList = {}) {
     // grabs the list of participating subs from the r/ModCoord wiki
     await appendList("/r/ModCoord/wiki/index.json")
     
@@ -85,9 +86,21 @@ async function createList() {
         console.log(section);
         subreddits[section] = [];
         for (var subreddit in subreddits_src[section]) {
+            var subName = subreddits_src[section][subreddit];
+            var subStatus = "public";
+            
+            var prevListSection = previousList[section];
+            if (prevListSection != undefined) {
+                var prevListSubreddit = previousList.find((element) => {
+                    return element["name"] == subName;
+                });
+                
+                if (prevListSubreddit != undefined) subStatus = prevListSubreddit["status"];
+            }
+            
             subreddits[section].push({
-                "name": subreddits_src[section][subreddit],
-                "status": "public"
+                "name": subName,
+                "status": subStatus
             });
         }
     }
@@ -211,12 +224,16 @@ async function continuouslyUpdate() {
         refreshSubredditList = false;
         currentlyRefreshing = true;
         
+        // create a temp copy of the pre-refresh subreddit list
+        var oldSubreddits = subreddits;
+        
         // clear the subreddit list variables
         subreddits_src = {};
         subreddits = {};
         
-        // create the new list
-        await createList();
+        // create the new list, passing in the old list
+        // (subs also in the old list will have their status copied over)
+        await createList(oldSubreddits);
         
         // the list has now been updated
         // the flag will be reset in the next call to updateStatus
