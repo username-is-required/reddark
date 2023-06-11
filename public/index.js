@@ -78,10 +78,10 @@ socket.on('disconnect', function () {
 });
 socket.on("updatenew", (data) => {
     if (data.status == "private") {
-        console.log("NEW ONE HAS GONE, SO LONG");
+        console.log(data.name + " HAS GONE, SO LONG");
         dark++;
     } else {
-        console.log("one has returned? :/");
+        console.log(data.name + "has returned? :/");
         dark--;
     }
     updateSubreddit(data, true);
