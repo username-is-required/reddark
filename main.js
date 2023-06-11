@@ -98,7 +98,7 @@ async function createList(previousList = {}) {
             
             var prevListSection = previousList[section];
             if (prevListSection != undefined) {
-                var prevListSubreddit = previousList.find((element) => {
+                var prevListSubreddit = prevListSection.find((element) => {
                     return element["name"] == subName;
                 });
                 

@@ -1,5 +1,5 @@
-# [Reddark](https://reddark.untone.uk/)
-A website to watch subreddits go dark in realtime.
+# [Reddark (fork)](https://reddark-digitalocean-7lhfr.ondigitalocean.app)
+A website to watch subreddits go dark in realtime. Fork of the repository by [Tanza3D](https://github.com/Tanza3D).
 
 ## Running
 To run this fork, the following enviromnent variables must be set:
