@@ -157,7 +157,7 @@ function updateStatus() {
                     try {
                         data = JSON.parse(data);
                     } catch (err) {
-                        console.log("Request to Reddit errored (bad JSON) - " + data);
+                        console.log("Request to Reddit errored (bad JSON), likely rate limited");
                         // error handling? the app will assume the sub is public
                         return;
                     }
