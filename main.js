@@ -150,7 +150,7 @@ function updateStatus() {
         // the delay (in ms) between sending off requests to reddit
         // aka the anti-rate-limiter
         // (probably also the anti-server-crasher tbf)
-        var delayBetweenRequests = 50;
+        var delayBetweenRequests = config.intervalBetweenRequests;
         
         var httpsRequests = [];
         const stackTrace = new Error().stack
