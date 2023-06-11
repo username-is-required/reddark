@@ -92,6 +92,13 @@ function doScroll(el) {
     const middle = absoluteElementTop - (window.innerHeight / 2);
     window.scrollTo(0, middle);
 }
+
+// not alerting for these subs as they've been spamming
+// back and forth between private and public
+const subsToFilter = [
+    "r/bi_irl",
+];
+
 function updateSubreddit(data, _new = false) {
     if (!loaded) return;
     
@@ -104,7 +111,7 @@ function updateSubreddit(data, _new = false) {
     }
     
     if (data.status == "private") {
-        if (_new) {
+        if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
             newStatusUpdate("<strong>" + data.name + "</strong> has gone private!", function () {
                 doScroll(subredditElement);
             })
@@ -112,7 +119,7 @@ function updateSubreddit(data, _new = false) {
         }
         subredditElement.classList.add("subreddit-private");
     } else {
-        if (_new) {
+        if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
             newStatusUpdate("<strong>" + data.name + "</strong> has gone public.", function () {
                 doScroll(subredditElement);
             })
