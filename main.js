@@ -177,6 +177,8 @@ function updateStatus() {
                     
                     if (typeof (data['reason']) != "undefined" && data['reason'] == "private" && subreddits[section][subreddit].status != "private") {
                         // the subreddit is private and the app doesn't know about it yet
+                        console.log("private: " + subreddits[section][subreddit].name);
+                        
                         subreddits[section][subreddit].status = "private";
                         if (firstCheck == false) {
                             io.emit("update", subreddits[section][subreddit]);
@@ -185,7 +187,7 @@ function updateStatus() {
                         }
                     } else if (subreddits[section][subreddit].status == "private" && typeof (data['reason']) == "undefined") {
                         // the subreddit is public but the app thinks it's private
-                        console.log("updating to public with data - " + data);
+                        console.log("public: " + subreddits[section][subreddit].name);
                         subreddits[section][subreddit].status = "public";
                         io.emit("updatenew", subreddits[section][subreddit]);
                     }
