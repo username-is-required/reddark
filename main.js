@@ -147,6 +147,7 @@ var checkCounter = 0;
 
 function updateStatus() {
     return new Promise(async (resolve, reject) => {
+        var delayBetweenRequests = 1;
         var httpsRequests = [];
         const stackTrace = new Error().stack
         checkCounter++;
@@ -167,6 +168,8 @@ function updateStatus() {
                         // error handling? the app will assume the sub is public
                         return;
                     }
+                    
+                    console.log("successfull response for " + subreddits[section][subreddit].name);
                     
                     if (typeof (data['reason']) != "undefined" && data['reason'] == "private" && subreddits[section][subreddit].status != "private") {
                         // the subreddit is private and the app doesn't know about it yet
@@ -192,10 +195,13 @@ function updateStatus() {
                     // error handling? the app will assume the sub is public
                 });
                 
+                console.log("request sent with delay: " + delayBetweenRequests);
                 httpsRequests.push(httpsReq);
                 
                 // wait between requests
-                await wait(1);
+                await wait(delayBetweenRequests);
+                
+                delayBetweenRequests++;
             }
         }
         
