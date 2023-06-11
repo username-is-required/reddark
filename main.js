@@ -146,7 +146,6 @@ function updateStatus() {
         console.log("Starting check " + checkCounter + " with stackTrace: " + stackTrace);
         for (let section in subreddits) {
             for (let subreddit in subreddits[section]) {
-                console.log("troubleshooting: " + "/" + subreddits[section][subreddit].name + ".json");
                 const httpsReq = request.httpsGet("/" + subreddits[section][subreddit].name + ".json").then((data) => {
                     try {
                         data = JSON.parse(data);
