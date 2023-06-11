@@ -2,6 +2,10 @@ module.exports = {
     // the port to listen on
     port: process.env.PORT, 
     
+    // delay/interval in between sending each http request in
+    // updateStatus (in ms)
+    intervalBetweenRequests: process.env.INTERVAL_BETWEEN_REQUESTS,
+    
     // interval in between the end of one updateStatus call and
     // the start of another (in ms)
     updateInterval: process.env.UPDATE_INTERVAL,

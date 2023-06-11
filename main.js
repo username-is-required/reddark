@@ -150,7 +150,7 @@ function updateStatus() {
         // the delay (in ms) between sending off requests to reddit
         // aka the anti-rate-limiter
         // (probably also the anti-server-crasher tbf)
-        var delayBetweenRequests = 50;
+        var delayBetweenRequests = config.intervalBetweenRequests;
         
         var httpsRequests = [];
         const stackTrace = new Error().stack
@@ -210,6 +210,9 @@ function updateStatus() {
         }
         
         await Promise.all(httpsRequests);
+        
+        console.log("All requests for check " + checkCounter + " completed");
+        console.log(config.updateInterval + "ms until next check");
         
         // all requests have now either been completed or errored
         if (!firstCheck) {
