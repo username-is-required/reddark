@@ -150,7 +150,7 @@ function updateStatus() {
         // the delay (in ms) between sending off requests to reddit
         // aka the anti-rate-limiter
         // (probably also the anti-server-crasher tbf)
-        var delayBetweenRequests = 80;
+        var delayBetweenRequests = 50;
         
         var httpsRequests = [];
         const stackTrace = new Error().stack
@@ -162,18 +162,18 @@ function updateStatus() {
                     try {
                         data = JSON.parse(data);
                     } catch (err) {
-                        console.log("Request to Reddit errored (bad JSON), likely rate limited");
+                        console.log(subreddits[section][subreddit].name + ": Request to Reddit errored (bad JSON), likely rate limited");
                         // error handling? the app will assume the sub is public
                         return;
                     }
                     
                     if (typeof (data['message']) != "undefined" && data['error'] == 500) {
-                        console.log("Request to Reddit errored (500) - " + data);
+                        console.log(subreddits[section][subreddit].name + ": Request to Reddit errored (500) - " + data);
                         // error handling? the app will assume the sub is public
                         return;
                     }
                     
-                    console.log("successfull response for " + subreddits[section][subreddit].name);
+                    //console.log("successful response for " + subreddits[section][subreddit].name);
                     
                     if (typeof (data['reason']) != "undefined" && data['reason'] == "private" && subreddits[section][subreddit].status != "private") {
                         // the subreddit is private and the app doesn't know about it yet
