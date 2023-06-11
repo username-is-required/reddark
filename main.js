@@ -97,16 +97,19 @@ async function createList() {
 
 firstCheck = false;
 
-// a flag to be used when it's time to refresh the list of participafinf
+// a flag to be used when it's *time* to refresh the list of participafinf
 // subreddits
 var refreshSubredditList = false;
+
+// a flag to be used when the subreddit list is *actually being updated*
+var currentlyRefreshing = false;
 
 var countTimeout = null;
 
 io.on('connection', (socket) => {
     if (firstCheck == false) {
         socket.emit("loading");
-    } else if (refreshSubredditList) {
+    } else if (currentlyRefreshing) {
         socket.emit("refreshing");
     } else {
         socket.emit("subreddits", subreddits);
@@ -183,12 +186,12 @@ function updateStatus() {
         
         // this statement will trigger if this is the first call to updateStatus
         // since the subreddit list refreshed
-        if (refreshSubredditList) {
+        if (currentlyRefreshing) {
             io.emit("subreddits-refreshed", subreddits);
             console.log("Emitted the refreshed list of subreddits");
             
             // reset the flag
-            refreshSubredditList = false;
+            currentlyRefreshing = false;
         }
         
         // the updating is now complete, resolve the promise
@@ -203,6 +206,10 @@ async function continuouslyUpdate() {
     // do we need to refresh the list of participating subs?
     if (refreshSubredditList) {
         console.log("About to refresh the subreddit list");
+        
+        // reset the 'time to refresh' flag, and set the currentlyRefreshing flag
+        refreshSubredditList = false;
+        currentlyRefreshing = true;
         
         // clear the subreddit list variables
         subreddits_src = {};
