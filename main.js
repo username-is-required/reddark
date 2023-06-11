@@ -209,7 +209,7 @@ function updateStatus() {
         
         // the updating is now complete, resolve the promise
         resolve();
-    }
+    });
 }
 
 // this function calls updateStatus to check/update the status of
