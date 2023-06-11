@@ -55,10 +55,10 @@ function fetchValidJsonData(url) {
     });
 }
 
-const subreddits_src = {
+var subreddits_src = {
 
 }
-const subreddits = {};
+var subreddits = {};
 
 async function appendList(url) {
     var section = [];
