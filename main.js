@@ -211,6 +211,9 @@ function updateStatus() {
         
         await Promise.all(httpsRequests);
         
+        console.log("All requests for check " + checkCounter + " completed");
+        console.log(config.updateInterval + "ms until next check");
+        
         // all requests have now either been completed or errored
         if (!firstCheck) {
             io.emit("subreddits", subreddits);
