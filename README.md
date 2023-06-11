@@ -5,6 +5,7 @@ A website to watch subreddits go dark in realtime.
 To run this fork, the following enviromnent variables must be set:
 
  - `PORT`
+ - `INTERVAL_BETWEEN_REQUESTS`
  - `UPDATE_INTERVAL`
  - `LIST_REFRESH_INTERVAL`
  - `URL`
