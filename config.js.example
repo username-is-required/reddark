@@ -1,6 +1,5 @@
 module.exports = {
     port: 3212,
     updateInterval: 5000,
-    listRefreshInterval: 10800000,
     url: "https://reddark.untone.uk/"
 }
