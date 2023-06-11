@@ -5,6 +5,13 @@ const { Server } = require("socket.io");
 var request = require("./requests.js");
 var config = require("./config.js")
 
+// helper function to wait for some time before continuing
+function wait(msDelay) {
+    return new Promise((resolve) => {
+        setTimeout(resolve, msDelay);
+    });
+}
+
 // init a server
 const app = express();
 const server = http.createServer(app);
@@ -186,6 +193,9 @@ function updateStatus() {
                 });
                 
                 httpsRequests.push(httpsReq);
+                
+                // wait between requests
+                await wait(1);
             }
         }
         
