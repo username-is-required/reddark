@@ -200,6 +200,15 @@ function updateStatus() {
                         } else {
                             io.emit("updatenew", subreddits[section][subreddit]);
                         }
+                        
+                    // if restricted
+                    }else if(data.data && data.data.children[0].data.subreddit_type != "public"){
+                        subreddits[section][subreddit].status = "restricted";
+                        if (firstCheck == false)
+                            io.emit("update", subreddits[section][subreddit]);
+                        else
+                            io.emit("updatenew", subreddits[section][subreddit]);
+                        
                     } else if (subreddits[section][subreddit].status == "private" && typeof (data['reason']) == "undefined") {
                         // the subreddit is public but the app thinks it's private
                         privateCount--;
