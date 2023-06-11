@@ -40,11 +40,17 @@ socket.on("subreddits-refreshed", (data) => {
 socket.on("update", (data) => {
     updateSubreddit(data);
 })
+
 socket.on("loading", () => {
     loaded = false;
     document.getElementById("list").innerHTML = "Server reloading...";
 })
 
+// if the subreddit list is being refreshed
+socket.on("refreshing", () => {
+    loaded = false;
+    document.getElementById("list").innerHTML = "Updating list of subreddits..."; 
+});
 
 socket.on('disconnect', function () {
     loaded = false;
