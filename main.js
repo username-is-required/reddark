@@ -180,10 +180,22 @@ async function updateStatus() {
     }
 }
 
+// a flag to be used when it's time to refresh the list of participafinf
+// subreddits
+var refreshSubredditList = false;
+
 // this function calls updateStatus to check/update the status of
 // the subreddits, then uses setTimeout to wait for the amount of
 // time specified in the config before the function is called again.
 async function continuouslyUpdate() {
+    // do we need to refresh the list of participating subs?
+    if (refreshSubredditList) {
+        
+        
+        // the list has now been updated - reset the flag
+        refreshSubredditList = false;
+    }
+    
     await updateStatus();
     setTimeout(continuouslyUpdate, config.updateInterval); // interval between updates set in the config file
 }
@@ -193,6 +205,12 @@ async function continuouslyUpdate() {
 async function run() {
     await createList();
     continuouslyUpdate();
+    
+    // every 3 hours, set a flag to refresh the list of participating
+    // subreddits (which is then picked up in continuouslyUpdate)
+    setInterval(() => {
+        refreshSubredditList = true;
+    }, 10800000);
 }
 
 
