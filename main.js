@@ -147,7 +147,11 @@ var checkCounter = 0;
 
 function updateStatus() {
     return new Promise(async (resolve, reject) => {
-        var delayBetweenRequests = 1;
+        // the delay (in ms) between sending off requests to reddit
+        // aka the anti-rate-limiter
+        // (probably also the anti-server-crasher tbf)
+        var delayBetweenRequests = 120;
+        
         var httpsRequests = [];
         const stackTrace = new Error().stack
         checkCounter++;
@@ -201,7 +205,7 @@ function updateStatus() {
                 // wait between requests
                 await wait(delayBetweenRequests);
                 
-                delayBetweenRequests++;
+                //delayBetweenRequests++;
             }
         }
         
