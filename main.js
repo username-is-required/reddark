@@ -179,6 +179,7 @@ function updateStatus() {
         // since the subreddit list refreshed
         if (refreshSubredditList) {
             io.emit("subreddits-refreshed", subreddits);
+            console.log("Emitted the refreshed list of subreddits");
             
             // reset the flag
             refreshSubredditList = false;
@@ -205,8 +206,12 @@ async function continuouslyUpdate() {
         subreddits_src = {};
         subreddits = {};
         
+        // create the new list
+        await createList();
+        
         // the list has now been updated
         // the flag will be reset in the next call to updateStatus
+        console.log("Subreddit list refreshed, proceeding to updateStatus");
     }
     
     await updateStatus();
