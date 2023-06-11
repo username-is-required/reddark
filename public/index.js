@@ -1,16 +1,37 @@
 var audioSystem = {
     playAudio: false,
-    play: function (file) {
-        var audio = new Audio('/audio/' + file + ".mp3");
-        if (this.playAudio == true)
-            audio.play();
+    
+    audio: {
+        madePrivate: new Audio('/audio/privated.mp3');
+        madePublic: new Audio('/audio/public.mp3');
+    },
+    
+    isPlaying: function(audioObj) {
+        return audioObj.currentTime > 0
+            && !audioObj.paused
+            && !audioObj.ended;
+    },
+    
+    play: function(audioObj) {
+        if (!this.playAudio) return;
+        
+        if (this.isPlaying(audioObj)) audioObj.currentTime = 0;
+        else audioObj.play();
+    },
+    
+    playPrivate: function() {
+        this.play(this.audio.madePrivate);
+    },
+    
+    playPublic: function() {
+        this.play(this.audio.madePublic);
     }
 }
 document.getElementById("enable_sounds").addEventListener("click", function () {
     if (audioSystem.playAudio == false) {
         document.getElementById("enable_sounds").innerHTML = "Disable sound alerts"
         audioSystem.playAudio = true;
-        audioSystem.play("privated");
+        audioSystem.playPrivate();
         newStatusUpdate("Enabled audio alerts.");
     } else {
         audioSystem.playAudio = false;
@@ -87,7 +108,7 @@ function updateSubreddit(data, _new = false) {
             newStatusUpdate("<strong>" + data.name + "</strong> has gone private!", function () {
                 doScroll(subredditElement);
             })
-            audioSystem.play("privated")
+            audioSystem.playPrivate();
         }
         subredditElement.classList.add("subreddit-private");
     } else {
@@ -95,7 +116,7 @@ function updateSubreddit(data, _new = false) {
             newStatusUpdate("<strong>" + data.name + "</strong> has gone public.", function () {
                 doScroll(subredditElement);
             })
-            audioSystem.play("public")
+            audioSystem.playPublic();
         }
         subredditElement.classList.remove("subreddit-private");
     }
