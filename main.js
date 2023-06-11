@@ -66,7 +66,7 @@ async function appendList(url) {
         if (line.startsWith("##") && !line.includes("Please") && line.includes(":")) {
             if (section != []) subreddits_src[sectionname] = section;
             section = [];
-            sectionname = line.replace("##", "");
+            sectionname = line.replace("##", "").replace("/r", "");
         }
         if (line.startsWith("r/")) {
             section.push(line);
