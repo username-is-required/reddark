@@ -66,10 +66,10 @@ async function appendList(url) {
         if (line.startsWith("##") && !line.includes("Please") && line.includes(":")) {
             if (section != []) subreddits_src[sectionname] = section;
             section = [];
-            sectionname = line.replace("##", "").replace("/r", "");
+            sectionname = line.replace("##", "").trim();
         }
         if (line.startsWith("r/")) {
-            section.push(line.replace("/r", ""));
+            section.push(line.trim());
         }
     }
     subreddits_src[sectionname] = section;
