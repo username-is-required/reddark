@@ -116,7 +116,7 @@ server.listen(config.port, () => {
 });
 var checkCounter = 0;
 
-async function updateStatus() {
+function updateStatus() {
     return new Promise((resolve, reject) => {
         var httpsRequests = [];
         const stackTrace = new Error().stack
@@ -175,6 +175,15 @@ async function updateStatus() {
             firstCheck = true;
         }
         
+        // this statement will trigger if this is the first call to updateStatus
+        // since the subreddit list refreshed
+        if (refreshSubredditList) {
+            io.emit("subreddits-refreshed", subreddits);
+            
+            // reset the flag
+            refreshSubredditList = false;
+        }
+        
         // the updating is now complete, resolve the promise
         resolve();
     }
@@ -190,10 +199,14 @@ var refreshSubredditList = false;
 async function continuouslyUpdate() {
     // do we need to refresh the list of participating subs?
     if (refreshSubredditList) {
+        console.log("About to refresh the subreddit list");
         
+        // clear the subreddit list variables
+        subreddits_src = {};
+        subreddits = {};
         
-        // the list has now been updated - reset the flag
-        refreshSubredditList = false;
+        // the list has now been updated
+        // the flag will be reset in the next call to updateStatus
     }
     
     await updateStatus();
@@ -209,6 +222,7 @@ async function run() {
     // every 3 hours, set a flag to refresh the list of participating
     // subreddits (which is then picked up in continuouslyUpdate)
     setInterval(() => {
+        console.log("refreshSubredditList flag set to true");
         refreshSubredditList = true;
     }, 10800000);
 }
