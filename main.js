@@ -74,7 +74,8 @@ async function appendList(url) {
     }
     subreddits_src[sectionname] = section;
 }
-async function createList() {
+
+async function createList(previousList = {}) {
     // grabs the list of participating subs from the r/ModCoord wiki
     await appendList("/r/ModCoord/wiki/index.json")
     
@@ -85,9 +86,21 @@ async function createList() {
         console.log(section);
         subreddits[section] = [];
         for (var subreddit in subreddits_src[section]) {
+            var subName = subreddits_src[section][subreddit];
+            var subStatus = "public";
+            
+            var prevListSection = previousList[section];
+            if (prevListSection != undefined) {
+                var prevListSubreddit = previousList.find((element) => {
+                    return element["name"] == subName;
+                });
+                
+                if (prevListSubreddit != undefined) subStatus = prevListSubreddit["status"];
+            }
+            
             subreddits[section].push({
-                "name": subreddits_src[section][subreddit],
-                "status": "public"
+                "name": subName,
+                "status": subStatus
             });
         }
     }
@@ -95,13 +108,22 @@ async function createList() {
     return;
 }
 
-
-
 firstCheck = false;
+
+// a flag to be used when it's *time* to refresh the list of participating
+// subreddits
+var refreshSubredditList = false;
+
+// a flag to be used when the subreddit list is *actually being updated*
+var currentlyRefreshing = false;
+
 var countTimeout = null;
+
 io.on('connection', (socket) => {
     if (firstCheck == false) {
         socket.emit("loading");
+    } else if (currentlyRefreshing) {
+        socket.emit("refreshing");
     } else {
         socket.emit("subreddits", subreddits);
     }
@@ -116,7 +138,7 @@ server.listen(config.port, () => {
 });
 var checkCounter = 0;
 
-async function updateStatus() {
+function updateStatus() {
     return new Promise((resolve, reject) => {
         var httpsRequests = [];
         const stackTrace = new Error().stack
@@ -175,6 +197,16 @@ async function updateStatus() {
             firstCheck = true;
         }
         
+        // this statement will trigger if this is the first call to updateStatus
+        // since the subreddit list refreshed
+        if (currentlyRefreshing) {
+            io.emit("subreddits-refreshed", subreddits);
+            console.log("Emitted the refreshed list of subreddits");
+            
+            // reset the flag
+            currentlyRefreshing = false;
+        }
+        
         // the updating is now complete, resolve the promise
         resolve();
     }
@@ -184,6 +216,30 @@ async function updateStatus() {
 // the subreddits, then uses setTimeout to wait for the amount of
 // time specified in the config before the function is called again.
 async function continuouslyUpdate() {
+    // do we need to refresh the list of participating subs?
+    if (refreshSubredditList) {
+        console.log("About to refresh the subreddit list");
+        
+        // reset the 'time to refresh' flag, and set the currentlyRefreshing flag
+        refreshSubredditList = false;
+        currentlyRefreshing = true;
+        
+        // create a temp copy of the pre-refresh subreddit list
+        var oldSubreddits = subreddits;
+        
+        // clear the subreddit list variables
+        subreddits_src = {};
+        subreddits = {};
+        
+        // create the new list, passing in the old list
+        // (subs also in the old list will have their status copied over)
+        await createList(oldSubreddits);
+        
+        // the list has now been updated
+        // the flag will be reset in the next call to updateStatus
+        console.log("Subreddit list refreshed, proceeding to updateStatus");
+    }
+    
     await updateStatus();
     setTimeout(continuouslyUpdate, config.updateInterval); // interval between updates set in the config file
 }
@@ -193,6 +249,13 @@ async function continuouslyUpdate() {
 async function run() {
     await createList();
     continuouslyUpdate();
+    
+    // after every config-specified interval, set a flag to refresh the list of participating
+    // subreddits (which is then picked up in continuouslyUpdate)
+    setInterval(() => {
+        console.log("refreshSubredditList flag set to true");
+        refreshSubredditList = true;
+    }, config.listRefreshInterval);
 }
 
 
