@@ -191,15 +191,15 @@ function updateStatus() {
                     }
                 }).catch((err) => {
                     if (err.message == "timed out") {
-                        console.log("Request to Reddit timed out");
+                        console.log(subreddits[section][subreddit].name + ": Request to Reddit timed out");
                     } else {
-                        console.log("Request to Reddit errored - " + err);
+                        console.log(subreddits[section][subreddit].name + ": Request to Reddit errored - " + err);
                     }
                     
                     // error handling? the app will assume the sub is public
                 });
                 
-                console.log("request sent with delay: " + delayBetweenRequests);
+                //console.log(subreddits[section][subreddit].name + ": request sent with delay: " + delayBetweenRequests);
                 httpsRequests.push(httpsReq);
                 
                 // wait between requests
