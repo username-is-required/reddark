@@ -26,32 +26,34 @@ app.get('/', (req, res) => {
 });
 app.use(express.static('public'))
 
+const subreddits_src = {
+
+}
+const subreddits = {};
+
 // a function to fetch data from a url and validate that it is JSON
 // it is persistent and will keep trying until it gets valid JSON
-function fetchValidJsonData(url) {
-    return new Promise(async (resolve, reject) => {
+async function fetchValidJsonData(url) {
+    return new Promise((resolve, reject) => {
         var data = await request.httpsGet(url);
         
         try {
             data = JSON.parse(data);
-            resolve(data);
         } catch (err) {
             console.log("Request to Reddit errored (bad JSON) [will retry] - " + data);
             
             // now we wait for 10 seconds and try it again!
             // 'resolving' the promise with...uhh, recursion
-            setTimeout(async () => {
-              data = await fetchValidJsonData(url);
-              resolve(data);
-            }, 10000);
+            setTimeout(
+                resolve(await fetchValidJsonData(url)),
+                10000
+            );
         }
+        
+        // if we're here, we have valid json
+        resolve(data);
     });
 }
-
-const subreddits_src = {
-
-}
-const subreddits = {};
 
 async function appendList(url) {
     var section = [];
@@ -59,7 +61,7 @@ async function appendList(url) {
     
     data = await fetchValidJsonData(url);
     
-    text = data['data']['content_md'];
+    text = data[0]['data']['children'][0]['data']['selftext'];
     //console.log(text);
     lines = text.split("\n");
     for (var line of lines) {
@@ -75,9 +77,8 @@ async function appendList(url) {
     subreddits_src[sectionname] = section;
 }
 async function createList() {
-    // grabs the list of participating subs from the r/ModCoord wiki
-    await appendList("/r/ModCoord/wiki/index.json")
-    
+    await appendList("/r/ModCoord/comments/1401qw5/incomplete_and_growing_list_of_participating.json")
+    await appendList("/r/ModCoord/comments/143fzf6/incomplete_and_growing_list_of_participating.json");
     console.log("grabbed subreddits");
     //subreddits_src["30+ million:"].push("r/tanzatest")
 
