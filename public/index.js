@@ -30,6 +30,13 @@ socket.on("subreddits", (data) => {
     fillSubredditsList(data);
 })
 
+socket.on("subreddits-refreshed", (data) => {
+    loaded = false;
+    document.getElementById("list").innerHTML = "Loading...";
+    fillSubredditsList(data);
+    newStatusUpdate("List of subreddits updated");
+});
+
 socket.on("update", (data) => {
     updateSubreddit(data);
 })
