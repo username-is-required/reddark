@@ -95,13 +95,19 @@ async function createList() {
     return;
 }
 
-
-
 firstCheck = false;
+
+// a flag to be used when it's time to refresh the list of participafinf
+// subreddits
+var refreshSubredditList = false;
+
 var countTimeout = null;
+
 io.on('connection', (socket) => {
     if (firstCheck == false) {
         socket.emit("loading");
+    } else if (refreshSubredditList) {
+        socket.emit("refreshing");
     } else {
         socket.emit("subreddits", subreddits);
     }
@@ -189,10 +195,6 @@ function updateStatus() {
         resolve();
     }
 }
-
-// a flag to be used when it's time to refresh the list of participafinf
-// subreddits
-var refreshSubredditList = false;
 
 // this function calls updateStatus to check/update the status of
 // the subreddits, then uses setTimeout to wait for the amount of
