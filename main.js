@@ -70,7 +70,7 @@ async function appendList(url) {
     //console.log(text);
     lines = text.split("\n");
     for (var line of lines) {
-        if (line.startsWith("##") && !line.includes("Please") && line.includes(":")) {
+        if (line.startsWith("##") && !line.includes("Please") && !line.includes("Combined") && !line.includes("Unique") && line.includes(":")) {
             if (section != []) subreddits_src[sectionname] = section;
             section = [];
             sectionname = line.replace("##", "").trim();
