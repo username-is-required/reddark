@@ -233,12 +233,12 @@ async function run() {
     await createList();
     continuouslyUpdate();
     
-    // every 3 hours, set a flag to refresh the list of participating
+    // after every config-specified interval, set a flag to refresh the list of participating
     // subreddits (which is then picked up in continuouslyUpdate)
     setInterval(() => {
         console.log("refreshSubredditList flag set to true");
         refreshSubredditList = true;
-    }, 10800000);
+    }, config.listRefreshInterval);
 }
 
 
