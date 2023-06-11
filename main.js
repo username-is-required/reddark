@@ -97,7 +97,7 @@ async function createList() {
 
 firstCheck = false;
 
-// a flag to be used when it's *time* to refresh the list of participafinf
+// a flag to be used when it's *time* to refresh the list of participating
 // subreddits
 var refreshSubredditList = false;
 
