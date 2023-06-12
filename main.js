@@ -81,6 +81,7 @@ async function appendList(url) {
             section.push(line.trim());
         }
     }
+    
     subreddits_src[sectionname] = section;
 }
 
@@ -137,12 +138,15 @@ var countTimeout = null;
 var reloadableClients = 0;
 
 io.on('connection', (socket) => {
+    var onNewVersion = false;
+    
     // listen for the client-info event
     socket.once("client-info", (data) => {
         if (data == undefined) return;
         if (data.reloadable != undefined && data.reloadable == true) {
             // this client is reloadable
             reloadableClients++;
+            onNewVersion = true;
             
             // listen for disconnect to decrement reloadableClients
             socket.once("disconnect", () => {
@@ -150,6 +154,20 @@ io.on('connection', (socket) => {
             });
         }
     });
+    
+    setTimeout(() => {
+        if (!onNewVersion) {
+            var sneakySubredditListEdit = {
+                "There is a new version available - please refresh the page!": []
+            };
+            
+            for (var section in subreddits) {
+                sneakySubredditListEdit[section] = subreddits[section];
+            }
+            
+            socket.emit("subreddits", sneakySubredditListEdit);
+        }
+    }, 30000);
     
     if (firstCheck == false) {
         socket.emit("loading");
