@@ -180,7 +180,7 @@ function updateStatus() {
         var requestErrorCount = 0;
         
         var httpsRequests = [];
-        console.log("** Starting check " + checkCounter + " **");
+        console.log("** Starting check " + (checkCounter + 1) + " **");
         checkCounter++;
         for (let section in subreddits) {
             for (let subreddit in subreddits[section]) {
@@ -247,7 +247,7 @@ function updateStatus() {
         
         await Promise.all(httpsRequests);
         
-        console.log("All requests for check " + checkCounter + " completed");
+        console.log("All requests for check " + (checkCounter + 1) + " completed");
         console.log(config.updateInterval + "ms until next check");
         
         // all requests have now either been completed or errored
