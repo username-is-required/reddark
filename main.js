@@ -134,7 +134,6 @@ var privateCount = 0;
 
 var countTimeout = null;
 
-var connectedClients = 0;
 var reloadableClients = [];
 
 io.on('connection', (socket) => {
