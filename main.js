@@ -138,14 +138,14 @@ var reloadableClients = 0;
 
 io.on('connection', (socket) => {
     // listen for the client-info event
-    socket.on("client-info", (data) => {
+    socket.once("client-info", (data) => {
         if (data == undefined) return;
         if (data.reloadable != undefined && data.reloadable == true) {
             // this client is reloadable
             reloadableClients++;
             
             // listen for disconnect to decrement reloadableClients
-            socket.on("disconnect", () => {
+            socket.once("disconnect", () => {
                 reloadableClients--;
             });
         }
