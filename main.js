@@ -134,21 +134,21 @@ var privateCount = 0;
 
 var countTimeout = null;
 
-var reloadableClients = [];
+var reloadableClients = 0;
 
 io.on('connection', (socket) => {
     // listen for the client-info event
     socket.on("client-info", (data) => {
         if (data == undefined) return;
         if (data.reloadable != undefined && data.reloadable == true) {
-            reloadableClients.push(socket.id);
+            // this client is reloadable
+            reloadableClients++;
+            
+            // listen for disconnect to decrement reloadableClients
+            socket.on("disconnect", () => {
+                reloadableClients--;
+            });
         }
-    });
-    
-    // listen for disconnect
-    socket.on("disconnect", () => {
-        const index = reloadableClients.indexOf(socket.id);
-        if (index != -1) reloadableClients.splice(index, 1);
     });
     
     if (firstCheck == false) {
@@ -160,7 +160,7 @@ io.on('connection', (socket) => {
     }
     clearTimeout(countTimeout);
     countTimeout = setTimeout(() => {
-        console.log('currently connected users: ' + io.engine.clientsCount + " (" + reloadableClients.length + " reloadable)");
+        console.log('currently connected users: ' + io.engine.clientsCount + " (" + reloadableClients + " reloadable)");
     }, 500);
 })
 
