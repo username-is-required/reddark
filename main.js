@@ -135,41 +135,23 @@ var privateCount = 0;
 
 var countTimeout = null;
 
-var reloadableClients = 0;
+var reloadableClients = [];
 
 io.on('connection', (socket) => {
-    var onNewVersion = false;
-    
     // listen for the client-info event
     socket.once("client-info", (data) => {
         if (data == undefined) return;
         if (data.reloadable != undefined && data.reloadable == true) {
             // this client is reloadable
-            reloadableClients++;
-            onNewVersion = true;
+            reloadableClients.push(socket.id);
             
             // listen for disconnect to decrement reloadableClients
             socket.once("disconnect", () => {
-                reloadableClients--;
+                const index = reloadableClients.indexOf(socket.id);
+                reloadableClients.splice(index, 1);
             });
         }
     });
-    
-    setTimeout(() => {
-        if (!onNewVersion) {
-            var sneakySubredditListEdit = {};
-            
-            sneakySubredditListEdit[
-                "There is a new version of this site available - please refresh the page!"
-            ] = [];
-            
-            for (var section in subreddits) {
-                sneakySubredditListEdit[section] = subreddits[section];
-            }
-            
-            socket.emit("subreddits", sneakySubredditListEdit);
-        }
-    }, 30000);
     
     if (firstCheck == false) {
         socket.emit("loading");
@@ -180,7 +162,7 @@ io.on('connection', (socket) => {
     }
     clearTimeout(countTimeout);
     countTimeout = setTimeout(() => {
-        console.log('currently connected users: ' + io.engine.clientsCount + " (" + reloadableClients + " reloadable)");
+        console.log('currently connected users: ' + io.engine.clientsCount + " (" + reloadableClients.length + " reloadable)");
     }, 500);
 })
 
@@ -227,7 +209,7 @@ function updateStatus() {
                         // the subreddit is private and the app doesn't know about it yet
                         privateCount++;
                         
-                        console.log("private: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
+                        if (firstCheck) console.log("private: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
                         
                         subreddits[section][subreddit].status = "private";
                         if (firstCheck == false) {
@@ -239,7 +221,7 @@ function updateStatus() {
                         // the subreddit is restricted and the app doesn't know about it yet
                         privateCount++;
                         
-                        console.log("restricted: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
+                        if (firstCheck) console.log("restricted: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
                         
                         subreddits[section][subreddit].status = "restricted";
                         if (firstCheck == false) {
@@ -258,10 +240,6 @@ function updateStatus() {
                         console.log("public: " + subreddits[section][subreddit].name + "(" + privateCount + ")");
                         subreddits[section][subreddit].status = "public";
                         io.emit("updatenew", subreddits[section][subreddit]);
-                    } else {
-                        // for some resson the status of the subreddit
-                        // doesn't match any of these tests
-                        console.log(subreddits[section][subreddit].name + ": no matching status");
                     }
                 }).catch((err) => {
                     requestErrorCount++;
@@ -298,15 +276,53 @@ function updateStatus() {
                 console.log("Client reload flag set, emitting reload signal");
                 io.emit("reload");
             }
-                            
-            io.emit("subreddits", subreddits);
+            
+            //try and inject a message telling the others to reload
+            var sneakySubredditListEdit = {};
+            
+            sneakySubredditListEdit[
+                "There is a new version of this site available - please refresh the page!"
+            ] = [];
+            
+            for (var section in subreddits) {
+                sneakySubredditListEdit[section] = subreddits[section];
+            }
+            
+            for (const [id, socket] of io.sockets.sockets) {
+                if (reloadableClients.includes(id)) {
+                    socket.emit("subreddits", subreddits);
+                } else {
+                    socket.emit("subreddits", sneakySubredditListEdit);
+                }
+            }
+            
+            //io.emit("subreddits", subreddits);
             firstCheck = true;
         }
         
         // this statement will trigger if this is the first call to updateStatus
         // since the subreddit list refreshed
         if (currentlyRefreshing && requestErrorCount < 20) {
-            io.emit("subreddits-refreshed", subreddits);
+            //try and inject a message telling the others to reload
+            var sneakySubredditListEdit = {};
+            
+            sneakySubredditListEdit[
+                "There is a new version of this site available - please refresh the page!"
+            ] = [];
+            
+            for (var section in subreddits) {
+                sneakySubredditListEdit[section] = subreddits[section];
+            }
+            
+            for (const [id, socket] of io.sockets.sockets) {
+                if (reloadableClients.includes(id)) {
+                    socket.emit("subreddits-refreshed", subreddits);
+                } else {
+                    socket.emit("subreddits-refreshed", sneakySubredditListEdit);
+                }
+            }
+            
+            //io.emit("subreddits-refreshed", subreddits);
             console.log("Emitted the refreshed list of subreddits");
             
             // reset the flag
