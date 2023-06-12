@@ -200,17 +200,24 @@ function updateStatus() {
                         } else {
                             io.emit("updatenew", subreddits[section][subreddit]);
                         }
+                    } else if (data['data'] && data['data']['children'][0]['data']['subreddit_type'] == "restricted" && subreddits[section][subreddit].status != "restricted"){
+                        // the subreddit is restricted and the app doesn't know about it yet
+                        privateCount++;
                         
-                    // if restricted
-                    }else if(data.data && data.data.children[0].data.subreddit_type == "restricted" && subreddits[section][subreddit].status != "restricted"){
+                        console.log("restricted: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
+                        
                         subreddits[section][subreddit].status = "restricted";
-                        if (firstCheck == false)
+                        if (firstCheck == false) {
                             io.emit("update", subreddits[section][subreddit]);
-                        else
+                        } else {
                             io.emit("updatenew", subreddits[section][subreddit]);
+                        }
                         
-                    } else if (subreddits[section][subreddit].status == "private" && typeof (data['reason']) == "undefined") {
-                        // the subreddit is public but the app thinks it's private
+                    } else if (
+                        (subreddits[section][subreddit].status == "private" && typeof (data['reason']) == "undefined")
+                        || (subreddits[section][subreddit].status == "restricted" && data['data'] && data['data']['children'][0]['data']['subreddit_type'] == "public")
+                    ) {
+                        // the subreddit is public but the app thinks it's private/restricted
                         privateCount--;
                         
                         console.log("public: " + subreddits[section][subreddit].name + "(" + privateCount + ")");
