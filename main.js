@@ -135,11 +135,11 @@ var privateCount = 0;
 
 var countTimeout = null;
 
-var reloadableClients = [];
+//var reloadableClients = [];
 
 io.on('connection', (socket) => {
     // listen for the client-info event
-    socket.once("client-info", (data) => {
+    /*socket.once("client-info", (data) => {
         if (data == undefined) return;
         if (data.reloadable != undefined && data.reloadable == true) {
             // this client is reloadable
@@ -150,7 +150,7 @@ io.on('connection', (socket) => {
                 const index = reloadableClients.indexOf(socket.id);
                 reloadableClients.splice(index, 1);
             });
-        }
+        }*/
     });
     
     if (firstCheck == false) {
@@ -207,7 +207,7 @@ function updateStatus() {
                     
                     if (typeof (data['reason']) != "undefined" && data['reason'] == "private" && subreddits[section][subreddit].status != "private") {
                         // the subreddit is private and the app doesn't know about it yet
-                        privateCount++;
+                        if (subreddits[section][subreddit].status != "restricted") privateCount++;
                         
                         if (firstCheck) console.log("private: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
                         
@@ -219,7 +219,7 @@ function updateStatus() {
                         }
                     } else if (data['data'] && data['data']['children'][0]['data']['subreddit_type'] == "restricted" && subreddits[section][subreddit].status != "restricted"){
                         // the subreddit is restricted and the app doesn't know about it yet
-                        privateCount++;
+                        if (subreddits[section][subreddit].status != "private") privateCount++;
                         
                         if (firstCheck) console.log("restricted: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
                         
@@ -272,13 +272,13 @@ function updateStatus() {
         if (!firstCheck && requestErrorCount < 20) {
             // emit the reload signal if the config instructs
             // to reload clients following deployment
-            if (config.reloadClientsFollowingDeployment) {
+            /*if (config.reloadClientsFollowingDeployment) {
                 console.log("Client reload flag set, emitting reload signal");
                 io.emit("reload");
-            }
+            }*/
             
             //try and inject a message telling the others to reload
-            var sneakySubredditListEdit = {};
+            /*var sneakySubredditListEdit = {};
             
             sneakySubredditListEdit[
                 "There is a new version of this site available - please refresh the page!"
@@ -294,9 +294,9 @@ function updateStatus() {
                 } else {
                     socket.emit("subreddits", sneakySubredditListEdit);
                 }
-            }
+            }*/
             
-            //io.emit("subreddits", subreddits);
+            io.emit("subreddits", subreddits);
             firstCheck = true;
         }
         
@@ -304,7 +304,7 @@ function updateStatus() {
         // since the subreddit list refreshed
         if (currentlyRefreshing && requestErrorCount < 20) {
             //try and inject a message telling the others to reload
-            var sneakySubredditListEdit = {};
+            /*var sneakySubredditListEdit = {};
             
             sneakySubredditListEdit[
                 "There is a new version of this site available - please refresh the page!"
@@ -320,9 +320,9 @@ function updateStatus() {
                 } else {
                     socket.emit("subreddits-refreshed", sneakySubredditListEdit);
                 }
-            }
+            }*/
             
-            //io.emit("subreddits-refreshed", subreddits);
+            io.emit("subreddits-refreshed", subreddits);
             console.log("Emitted the refreshed list of subreddits");
             
             // reset the flag
