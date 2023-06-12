@@ -60,6 +60,8 @@ var subreddits_src = {
 }
 var subreddits = {};
 
+var subredditCount = 0;
+
 async function appendList(url) {
     var section = [];
     var sectionname = "";
@@ -104,6 +106,8 @@ async function createList(previousList = {}) {
                 
                 if (prevListSubreddit != undefined) subStatus = prevListSubreddit["status"];
             }
+            
+            subredditCount++;
             
             subreddits[section].push({
                 "name": subName,
@@ -156,6 +160,9 @@ function updateStatus() {
         // (probably also the anti-server-crasher tbf)
         var delayBetweenRequests = config.intervalBetweenRequests;
         
+        // keep count of the number of requests that errored
+        var requestErrorCount = 0;
+        
         var httpsRequests = [];
         const stackTrace = new Error().stack
         checkCounter++;
@@ -167,12 +174,14 @@ function updateStatus() {
                         data = JSON.parse(data);
                     } catch (err) {
                         console.log(subreddits[section][subreddit].name + ": Request to Reddit errored (bad JSON), likely rate limited");
+                        requestErrorCount++;
                         // error handling? the app will assume the sub is public
                         return;
                     }
                     
                     if (typeof (data['message']) != "undefined" && data['error'] == 500) {
                         console.log(subreddits[section][subreddit].name + ": Request to Reddit errored (500) - " + data);
+                        requestErrorCount++;
                         // error handling? the app will assume the sub is public
                         return;
                     }
@@ -200,6 +209,8 @@ function updateStatus() {
                         io.emit("updatenew", subreddits[section][subreddit]);
                     }
                 }).catch((err) => {
+                    requestErrorCount++;
+                    
                     if (err.message == "timed out") {
                         console.log(subreddits[section][subreddit].name + ": Request to Reddit timed out");
                     } else {
@@ -225,14 +236,14 @@ function updateStatus() {
         console.log(config.updateInterval + "ms until next check");
         
         // all requests have now either been completed or errored
-        if (!firstCheck) {
+        if (!firstCheck && requestErrorCount < (subredditCount / 2)) {
             io.emit("subreddits", subreddits);
             firstCheck = true;
         }
         
         // this statement will trigger if this is the first call to updateStatus
         // since the subreddit list refreshed
-        if (currentlyRefreshing) {
+        if (currentlyRefreshing && requestErrorCount < (subredditCount / 2)) {
             io.emit("subreddits-refreshed", subreddits);
             console.log("Emitted the refreshed list of subreddits");
             
@@ -263,6 +274,7 @@ async function continuouslyUpdate() {
         // clear the subreddit list variables
         subreddits_src = {};
         subreddits = {};
+        subredditCount = 0;
         
         // create the new list, passing in the old list
         // (subs also in the old list will have their status copied over)
