@@ -19,5 +19,5 @@ module.exports = {
     
     // whether or not to emit a signal to reload clients
     // after a new deployment
-    reloadClientsFollowingDeployment: process.env.RELOAD_CLIENTS_FOLLOWING_DEPLOYMENT
+    reloadClientsFollowingDeployment: (process.env.RELOAD_CLIENTS_FOLLOWING_DEPLOYMENT === "true")
 }
