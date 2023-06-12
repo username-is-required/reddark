@@ -150,8 +150,8 @@ io.on('connection', (socket) => {
                 const index = reloadableClients.indexOf(socket.id);
                 reloadableClients.splice(index, 1);
             });
-        }*/
-    });
+        }
+    });*/
     
     if (firstCheck == false) {
         socket.emit("loading");
