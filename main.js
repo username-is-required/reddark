@@ -81,6 +81,7 @@ async function appendList(url) {
             section.push(line.trim());
         }
     }
+    
     subreddits_src[sectionname] = section;
 }
 
@@ -137,12 +138,15 @@ var countTimeout = null;
 var reloadableClients = 0;
 
 io.on('connection', (socket) => {
+    var onNewVersion = false;
+    
     // listen for the client-info event
     socket.once("client-info", (data) => {
         if (data == undefined) return;
         if (data.reloadable != undefined && data.reloadable == true) {
             // this client is reloadable
             reloadableClients++;
+            onNewVersion = true;
             
             // listen for disconnect to decrement reloadableClients
             socket.once("disconnect", () => {
@@ -150,6 +154,22 @@ io.on('connection', (socket) => {
             });
         }
     });
+    
+    setTimeout(() => {
+        if (!onNewVersion) {
+            var sneakySubredditListEdit = {};
+            
+            sneakySubredditListEdit[
+                "There is a new version of this site available - please refresh the page!"
+            ] = [];
+            
+            for (var section in subreddits) {
+                sneakySubredditListEdit[section] = subreddits[section];
+            }
+            
+            socket.emit("subreddits", sneakySubredditListEdit);
+        }
+    }, 30000);
     
     if (firstCheck == false) {
         socket.emit("loading");
@@ -215,13 +235,33 @@ function updateStatus() {
                         } else {
                             io.emit("updatenew", subreddits[section][subreddit]);
                         }
-                    } else if (subreddits[section][subreddit].status == "private" && typeof (data['reason']) == "undefined") {
-                        // the subreddit is public but the app thinks it's private
+                    } else if (data['data'] && data['data']['children'][0]['data']['subreddit_type'] == "restricted" && subreddits[section][subreddit].status != "restricted"){
+                        // the subreddit is restricted and the app doesn't know about it yet
+                        privateCount++;
+                        
+                        console.log("restricted: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
+                        
+                        subreddits[section][subreddit].status = "restricted";
+                        if (firstCheck == false) {
+                            io.emit("update", subreddits[section][subreddit]);
+                        } else {
+                            io.emit("updatenew", subreddits[section][subreddit]);
+                        }
+                        
+                    } else if (
+                        (subreddits[section][subreddit].status == "private" && typeof (data['reason']) == "undefined")
+                        || (subreddits[section][subreddit].status == "restricted" && data['data'] && data['data']['children'][0]['data']['subreddit_type'] == "public")
+                    ) {
+                        // the subreddit is public but the app thinks it's private/restricted
                         privateCount--;
                         
                         console.log("public: " + subreddits[section][subreddit].name + "(" + privateCount + ")");
                         subreddits[section][subreddit].status = "public";
                         io.emit("updatenew", subreddits[section][subreddit]);
+                    } else {
+                        // for some resson the status of the subreddit
+                        // doesn't match any of these tests
+                        console.log(subreddits[section][subreddit].name + ": no matching status");
                     }
                 }).catch((err) => {
                     requestErrorCount++;

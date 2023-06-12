@@ -95,7 +95,7 @@ socket.on('disconnect', function () {
     loaded = false;
 });
 socket.on("updatenew", (data) => {
-    if (data.status == "private") {
+    if (data.status == "private" || data.status == "restricted") {
         console.log("NEW PRIVATE (o7): " + data.name);
         dark++;
     } else {
@@ -139,6 +139,15 @@ function updateSubreddit(data, _new = false) {
             audioSystem.playPrivate();
         }
         subredditElement.classList.add("subreddit-private");
+
+    }else if (data.status == "restricted") {
+        if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted!", function () {
+                doScroll(subredditElement);
+            })
+            audioSystem.playPrivate();
+        }
+        subredditElement.classList.add("subreddit-restricted");
     } else {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
             newStatusUpdate("<strong>" + data.name + "</strong> has gone public.", function () {
@@ -149,7 +158,7 @@ function updateSubreddit(data, _new = false) {
         subredditElement.classList.remove("subreddit-private");
     }
     updateStatusText();
-    document.getElementById(data.name).querySelector("p").innerHTML = data.status;
+    subredditElement.querySelector("p").innerHTML = data.status;
 }
 
 function genItem(name, status) {
@@ -161,8 +170,10 @@ function genItem(name, status) {
     _status.innerHTML = status;
     _title.href = "https://old.reddit.com/" + name;
     _item.id = name;
-    if (status != "public") {
+    if (status == "private") {
         _item.classList.add("subreddit-private");
+    } else if (status == "restricted") {
+        _item.classList.add("subreddit-restricted");
     }
     _item.appendChild(_title);
     _item.appendChild(_status);
@@ -184,7 +195,7 @@ function fillSubredditsList(data) {
         var sectionGrid = Object.assign(document.createElement("div"), { "classList": "section-grid" })
         for (var subreddit of data[section]) {
             amount++;
-            if (subreddit.status == "private") {
+            if (subreddit.status == "private" || subreddit.status == "restricted") {
                 dark++;
             }
             sectionGrid.appendChild(genItem(subreddit.name, subreddit.status));
