@@ -258,10 +258,6 @@ function updateStatus() {
                         console.log("public: " + subreddits[section][subreddit].name + "(" + privateCount + ")");
                         subreddits[section][subreddit].status = "public";
                         io.emit("updatenew", subreddits[section][subreddit]);
-                    } else {
-                        // for some resson the status of the subreddit
-                        // doesn't match any of these tests
-                        console.log(subreddits[section][subreddit].name + ": no matching status");
                     }
                 }).catch((err) => {
                     requestErrorCount++;
