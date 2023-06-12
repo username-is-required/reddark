@@ -227,7 +227,7 @@ function updateStatus() {
                         // the subreddit is private and the app doesn't know about it yet
                         privateCount++;
                         
-                        console.log("private: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
+                        if (firstCheck) console.log("private: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
                         
                         subreddits[section][subreddit].status = "private";
                         if (firstCheck == false) {
@@ -239,7 +239,7 @@ function updateStatus() {
                         // the subreddit is restricted and the app doesn't know about it yet
                         privateCount++;
                         
-                        console.log("restricted: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
+                        if (firstCheck) console.log("restricted: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
                         
                         subreddits[section][subreddit].status = "restricted";
                         if (firstCheck == false) {
