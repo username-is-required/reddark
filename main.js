@@ -134,7 +134,24 @@ var privateCount = 0;
 
 var countTimeout = null;
 
+var connectedClients = 0;
+var reloadableClients = [];
+
 io.on('connection', (socket) => {
+    // listen for the client-info event
+    socket.on("client-info", (data) => {
+        if (data == undefined) return;
+        if (data.reloadable != undefined && data.reloadable == true) {
+            reloadableClients.push(socket.id);
+        }
+    });
+    
+    // listen for disconnect
+    socket.on("disconnect", () => {
+        const index = reloadableClients.indexOf(socket.id);
+        if (index != -1) reloadableClients.splice(index, 1);
+    });
+    
     if (firstCheck == false) {
         socket.emit("loading");
     } else if (currentlyRefreshing) {
@@ -144,9 +161,9 @@ io.on('connection', (socket) => {
     }
     clearTimeout(countTimeout);
     countTimeout = setTimeout(() => {
-        console.log('currently connected users: ' + io.engine.clientsCount);
+        console.log('currently connected users: ' + io.engine.clientsCount + " (" + reloadableClients.length + " reloadable)");
     }, 500);
-});
+})
 
 server.listen(config.port, () => {
     console.log('listening on *:' + config.port);
