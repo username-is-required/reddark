@@ -98,7 +98,8 @@ function doScroll(el) {
 const subsToFilter = [
     "r/bi_irl",
     "r/suddenlybi",
-    "r/ennnnnnnnnnnnbbbbbby"
+    "r/ennnnnnnnnnnnbbbbbby",
+    "r/seriouslyfuckspez"
 ];
 
 function updateSubreddit(data, _new = false) {
