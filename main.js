@@ -164,7 +164,7 @@ function updateStatus() {
         var requestErrorCount = 0;
         
         var httpsRequests = [];
-        const stackTrace = new Error().stack
+        console.log("** Starting check " + checkCounter + " **");
         checkCounter++;
         console.log("Starting check " + checkCounter + " with stackTrace: " + stackTrace);
         for (let section in subreddits) {
