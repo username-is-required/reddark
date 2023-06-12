@@ -251,7 +251,7 @@ function updateStatus() {
         console.log(config.updateInterval + "ms until next check");
         
         // all requests have now either been completed or errored
-        if (!firstCheck && requestErrorCount < (subredditCount / 10)) {
+        if (!firstCheck && requestErrorCount == 0) {
             // emit the reload signal if the config instructs
             // to reload clients following deployment
             if (config.reloadClientsFollowingDeployment) {
