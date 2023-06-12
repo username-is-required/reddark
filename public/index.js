@@ -60,12 +60,23 @@ socket.on("subreddits-refreshed", (data) => {
 
 socket.on("update", (data) => {
     updateSubreddit(data);
-})
+});
+
+// this might come in handy
+// (it *would* be handy to use after implementing restricted subs,
+// if i'd had the foresight to include it earlier);
+socket.on("reload", () => {
+    // reload the page in between 0-5s
+    // (staggered to hopefully not kill my server by way of an accidentsl ddos)
+    setTimeout(() => {
+        location.reload();
+    }, Math.floor(Math.random() * 5000));
+});
 
 socket.on("loading", () => {
     loaded = false;
     document.getElementById("list").innerHTML = "Server reloading...";
-})
+});
 
 // if the subreddit list is being refreshed
 socket.on("refreshing", () => {
