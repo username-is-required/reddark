@@ -70,7 +70,7 @@ socket.on("reload", () => {
     // (staggered to hopefully not kill my server by way of an accidentsl ddos)
     setTimeout(() => {
         location.reload();
-    }, Math.floor(Math.random() * 5000));
+    }, Math.floor(Math.random() * 10000));
 });
 
 socket.on("loading", () => {
