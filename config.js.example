@@ -3,5 +3,6 @@ module.exports = {
     intervalBetweenRequests: 7,
     updateInterval: 10000,
     listRefreshInterval: 1800000,
-    url: "https://reddark-digitalocean-7lhfr.ondigitalocean.app/"
+    url: "https://reddark-digitalocean-7lhfr.ondigitalocean.app/",
+    "reloadClientsFollowingDeployment": true
 }

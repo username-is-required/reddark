@@ -134,7 +134,23 @@ var privateCount = 0;
 
 var countTimeout = null;
 
+var reloadableClients = 0;
+
 io.on('connection', (socket) => {
+    // listen for the client-info event
+    socket.once("client-info", (data) => {
+        if (data == undefined) return;
+        if (data.reloadable != undefined && data.reloadable == true) {
+            // this client is reloadable
+            reloadableClients++;
+            
+            // listen for disconnect to decrement reloadableClients
+            socket.once("disconnect", () => {
+                reloadableClients--;
+            });
+        }
+    });
+    
     if (firstCheck == false) {
         socket.emit("loading");
     } else if (currentlyRefreshing) {
@@ -144,9 +160,9 @@ io.on('connection', (socket) => {
     }
     clearTimeout(countTimeout);
     countTimeout = setTimeout(() => {
-        console.log('currently connected users: ' + io.engine.clientsCount);
+        console.log('currently connected users: ' + io.engine.clientsCount + " (" + reloadableClients + " reloadable)");
     }, 500);
-});
+})
 
 server.listen(config.port, () => {
     console.log('listening on *:' + config.port);
@@ -166,7 +182,6 @@ function updateStatus() {
         var httpsRequests = [];
         console.log("** Starting check " + checkCounter + " **");
         checkCounter++;
-        console.log("Starting check " + checkCounter + " with stackTrace: " + stackTrace);
         for (let section in subreddits) {
             for (let subreddit in subreddits[section]) {
                 const httpsReq = request.httpsGet("/" + subreddits[section][subreddit].name + ".json").then((data) => {
@@ -257,6 +272,13 @@ function updateStatus() {
         
         // all requests have now either been completed or errored
         if (!firstCheck && requestErrorCount < (subredditCount / 2)) {
+            // emit the reload signal if the config instructs
+            // to reload clients following deployment
+            if (config.reloadClientsFollowingDeployment) {
+                console.log("Client reload flag set, emitting reload signal");
+                io.emit("reload");
+            }
+                            
             io.emit("subreddits", subreddits);
             firstCheck = true;
         }

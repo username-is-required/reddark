@@ -41,6 +41,13 @@ document.getElementById("enable_sounds").addEventListener("click", function () {
 })
 var socket = io();
 
+// emit client info to socket once connected
+socket.on("connect", () => {
+    socket.emit("client-info", {
+        reloadable: true
+    });
+});
+
 var amount = 0;
 var dark = 0;
 
@@ -109,7 +116,8 @@ function doScroll(el) {
 const subsToFilter = [
     "r/bi_irl",
     "r/suddenlybi",
-    "r/ennnnnnnnnnnnbbbbbby"
+    "r/ennnnnnnnnnnnbbbbbby",
+    "r/seriouslyfuckspez"
 ];
 
 function updateSubreddit(data, _new = false) {
