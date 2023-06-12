@@ -162,7 +162,7 @@ io.on('connection', (socket) => {
     }
     clearTimeout(countTimeout);
     countTimeout = setTimeout(() => {
-        console.log('currently connected users: ' + io.engine.clientsCount + " (" + reloadableClients.length + " reloadable)");
+        console.log('currently connected users: ' + io.engine.clientsCount /*+ " (" + reloadableClients.length + " reloadable)"*/);
     }, 500);
 })
 
