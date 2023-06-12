@@ -97,7 +97,8 @@ function doScroll(el) {
 // back and forth between private and public
 const subsToFilter = [
     "r/bi_irl",
-    "r/suddenlybi"
+    "r/suddenlybi",
+    "r/ennnnnnnnnnnnbbbbbby"
 ];
 
 function updateSubreddit(data, _new = false) {
