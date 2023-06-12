@@ -41,6 +41,13 @@ document.getElementById("enable_sounds").addEventListener("click", function () {
 })
 var socket = io();
 
+// emit client info to socket once connected
+socket.on("connect", () => {
+    socket.emit("client-info", {
+        reloadable: true
+    });
+});
+
 var amount = 0;
 var dark = 0;
 
@@ -60,12 +67,23 @@ socket.on("subreddits-refreshed", (data) => {
 
 socket.on("update", (data) => {
     updateSubreddit(data);
-})
+});
+
+// this might come in handy
+// (it *would* be handy to use after implementing restricted subs,
+// if i'd had the foresight to include it earlier);
+socket.on("reload", () => {
+    // reload the page in between 0-5s
+    // (staggered to hopefully not kill my server by way of an accidentsl ddos)
+    setTimeout(() => {
+        location.reload();
+    }, Math.floor(Math.random() * 10000));
+});
 
 socket.on("loading", () => {
     loaded = false;
     document.getElementById("list").innerHTML = "Server reloading...";
-})
+});
 
 // if the subreddit list is being refreshed
 socket.on("refreshing", () => {
@@ -78,10 +96,10 @@ socket.on('disconnect', function () {
 });
 socket.on("updatenew", (data) => {
     if (data.status == "private") {
-        console.log(data.name + " HAS GONE, SO LONG");
+        console.log("NEW PRIVATE (o7): " + data.name);
         dark++;
     } else {
-        console.log(data.name + " has returned? :/");
+        console.log(":/ new public: " + data.name);
         dark--;
     }
     updateSubreddit(data, true);
@@ -98,7 +116,8 @@ function doScroll(el) {
 const subsToFilter = [
     "r/bi_irl",
     "r/suddenlybi",
-    "r/ennnnnnnnnnnnbbbbbby"
+    "r/ennnnnnnnnnnnbbbbbby",
+    "r/seriouslyfuckspez"
 ];
 
 function updateSubreddit(data, _new = false) {

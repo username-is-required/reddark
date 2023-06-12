@@ -60,6 +60,8 @@ var subreddits_src = {
 }
 var subreddits = {};
 
+var subredditCount = 0;
+
 async function appendList(url) {
     var section = [];
     var sectionname = "";
@@ -105,6 +107,8 @@ async function createList(previousList = {}) {
                 if (prevListSubreddit != undefined) subStatus = prevListSubreddit["status"];
             }
             
+            subredditCount++;
+            
             subreddits[section].push({
                 "name": subName,
                 "status": subStatus
@@ -130,7 +134,23 @@ var privateCount = 0;
 
 var countTimeout = null;
 
+var reloadableClients = 0;
+
 io.on('connection', (socket) => {
+    // listen for the client-info event
+    socket.on("client-info", (data) => {
+        if (data == undefined) return;
+        if (data.reloadable != undefined && data.reloadable == true) {
+            // this client is reloadable
+            reloadableClients++;
+            
+            // listen for disconnect to decrement reloadableClients
+            socket.on("disconnect", () => {
+                reloadableClients--;
+            });
+        }
+    });
+    
     if (firstCheck == false) {
         socket.emit("loading");
     } else if (currentlyRefreshing) {
@@ -140,9 +160,9 @@ io.on('connection', (socket) => {
     }
     clearTimeout(countTimeout);
     countTimeout = setTimeout(() => {
-        console.log('currently connected users: ' + io.engine.clientsCount);
+        console.log('currently connected users: ' + io.engine.clientsCount + " (" + reloadableClients + " reloadable)");
     }, 500);
-});
+})
 
 server.listen(config.port, () => {
     console.log('listening on *:' + config.port);
@@ -156,8 +176,11 @@ function updateStatus() {
         // (probably also the anti-server-crasher tbf)
         var delayBetweenRequests = config.intervalBetweenRequests;
         
+        // keep count of the number of requests that errored
+        var requestErrorCount = 0;
+        
         var httpsRequests = [];
-        const stackTrace = new Error().stack
+        console.log("** Starting check " + checkCounter + " **");
         checkCounter++;
         console.log("Starting check " + checkCounter + " with stackTrace: " + stackTrace);
         for (let section in subreddits) {
@@ -167,12 +190,14 @@ function updateStatus() {
                         data = JSON.parse(data);
                     } catch (err) {
                         console.log(subreddits[section][subreddit].name + ": Request to Reddit errored (bad JSON), likely rate limited");
+                        requestErrorCount++;
                         // error handling? the app will assume the sub is public
                         return;
                     }
                     
                     if (typeof (data['message']) != "undefined" && data['error'] == 500) {
                         console.log(subreddits[section][subreddit].name + ": Request to Reddit errored (500) - " + data);
+                        requestErrorCount++;
                         // error handling? the app will assume the sub is public
                         return;
                     }
@@ -200,6 +225,8 @@ function updateStatus() {
                         io.emit("updatenew", subreddits[section][subreddit]);
                     }
                 }).catch((err) => {
+                    requestErrorCount++;
+                    
                     if (err.message == "timed out") {
                         console.log(subreddits[section][subreddit].name + ": Request to Reddit timed out");
                     } else {
@@ -225,14 +252,21 @@ function updateStatus() {
         console.log(config.updateInterval + "ms until next check");
         
         // all requests have now either been completed or errored
-        if (!firstCheck) {
+        if (!firstCheck && requestErrorCount < (subredditCount / 2)) {
+            // emit the reload signal if the config instructs
+            // to reload clients following deployment
+            if (config.reloadClientsFollowingDeployment) {
+                console.log("Client reload flag set, emitting reload signal");
+                io.emit("reload");
+            }
+                            
             io.emit("subreddits", subreddits);
             firstCheck = true;
         }
         
         // this statement will trigger if this is the first call to updateStatus
         // since the subreddit list refreshed
-        if (currentlyRefreshing) {
+        if (currentlyRefreshing && requestErrorCount < (subredditCount / 2)) {
             io.emit("subreddits-refreshed", subreddits);
             console.log("Emitted the refreshed list of subreddits");
             
@@ -263,6 +297,7 @@ async function continuouslyUpdate() {
         // clear the subreddit list variables
         subreddits_src = {};
         subreddits = {};
+        subredditCount = 0;
         
         // create the new list, passing in the old list
         // (subs also in the old list will have their status copied over)

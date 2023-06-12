@@ -15,5 +15,9 @@ module.exports = {
     listRefreshInterval: process.env.LIST_REFRESH_INTERVAL,
     
     // the url where the site will be accessible (used for CORS)
-    url: process.env.URL
+    url: process.env.URL,
+    
+    // whether or not to emit a signal to reload clients
+    // after a new deployment
+    reloadClientsFollowingDeployment: process.env.RELOAD_CLIENTS_FOLLOWING_DEPLOYMENT
 }
