@@ -122,7 +122,7 @@ function updateSubreddit(data, _new = false) {
         subredditElement.classList.add("subreddit-private");
 
     }else if (data.status == "restricted") {
-        if (_new) {
+        if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
             newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted!", function () {
                 doScroll(document.getElementById(data.name));
             })
