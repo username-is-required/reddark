@@ -157,9 +157,11 @@ io.on('connection', (socket) => {
     
     setTimeout(() => {
         if (!onNewVersion) {
-            var sneakySubredditListEdit = {
-                "There is a new version available - please refresh the page!": []
-            };
+            var sneakySubredditListEdit = {};
+            
+            sneakySubredditListEdit[
+                "There is a new version of this site available - please refresh the page!"
+            ] = [];
             
             for (var section in subreddits) {
                 sneakySubredditListEdit[section] = subreddits[section];
