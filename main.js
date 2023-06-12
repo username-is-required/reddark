@@ -237,6 +237,13 @@ function updateStatus() {
         
         // all requests have now either been completed or errored
         if (!firstCheck && requestErrorCount < (subredditCount / 2)) {
+            // emit the reload signal if the config instructs
+            // to reload clients following deployment
+            if (config.reloadClientsFollowingDeployment) {
+                console.log("Client reload flag set, emitting reload signal");
+                io.emit("reload");
+            }
+                            
             io.emit("subreddits", subreddits);
             firstCheck = true;
         }
