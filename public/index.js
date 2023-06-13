@@ -32,10 +32,10 @@ document.getElementById("enable_sounds").addEventListener("click", function () {
         document.getElementById("enable_sounds").innerHTML = "Disable sound alerts"
         audioSystem.playAudio = true;
         audioSystem.playPrivate();
-        newStatusUpdate("Enabled audio alerts.");
+        newStatusUpdate("Enabled audio alerts.", null);
     } else {
         audioSystem.playAudio = false;
-        newStatusUpdate("Disabled audio alerts.");
+        newStatusUpdate("Disabled audio alerts.", null);
         document.getElementById("enable_sounds").innerHTML = "Enable sound alerts"
     }
 })
@@ -62,7 +62,7 @@ socket.on("subreddits-refreshed", (data) => {
     loaded = false;
     document.getElementById("list").innerHTML = "Loading...";
     fillSubredditsList(data);
-    newStatusUpdate("List of subreddits updated");
+    newStatusUpdate("List of subreddits updated", null);
 });
 
 socket.on("update", (data) => {
@@ -73,11 +73,11 @@ socket.on("update", (data) => {
 // (it *would* be handy to use after implementing restricted subs,
 // if i'd had the foresight to include it earlier);
 socket.on("reload", () => {
-    // reload the page in between 0-5s
+    // reload the page in between 0-20s
     // (staggered to hopefully not kill my server by way of an accidentsl ddos)
     setTimeout(() => {
         location.reload();
-    }, Math.floor(Math.random() * 10000));
+    }, Math.floor(Math.random() * 20000));
 });
 
 socket.on("loading", () => {
@@ -112,10 +112,10 @@ function doScroll(el) {
 // not alerting for these subs as they've been spamming
 // back and forth between private and public
 const subsToFilter = [
-    "r/bi_irl",
+    /*"r/bi_irl",
     "r/suddenlybi",
     "r/ennnnnnnnnnnnbbbbbby",
-    "r/seriouslyfuckspez"
+    "r/seriouslyfuckspez"*/
 ];
 
 function updateSubreddit(data, _new = false) {
@@ -131,7 +131,7 @@ function updateSubreddit(data, _new = false) {
     
     if (data.status == "private") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong> has gone private!", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone private!", "private", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPrivate();
@@ -144,7 +144,7 @@ function updateSubreddit(data, _new = false) {
         }
     } else if (data.status == "restricted") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted!", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted!", "restricted", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPrivate();
@@ -157,7 +157,7 @@ function updateSubreddit(data, _new = false) {
         }
     } else {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong> has gone public.", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone public.", "public", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPublic();
@@ -219,8 +219,19 @@ function fillSubredditsList(data) {
 function updateStatusText() {
     document.getElementById("amount").innerHTML = "<strong>" + dark + "</strong><light>/" + amount + "</light> subreddits are currently dark.";
 }
-function newStatusUpdate(text, callback = null) {
+function newStatusUpdate(text, status, callback = null) {
     var item = Object.assign(document.createElement("div"), { "className": "status-update" });
+    switch (status) {
+        case "private":
+            item.classList.add("status-update-private");
+            break;
+        case "restricted":
+            item.classList.add("status-update-restricted");
+            break;
+        case "public":
+            item.classList.add("status-update-public");
+            break;
+    }
     item.innerHTML = text;
     document.getElementById("statusupdates").appendChild(item);
     setTimeout(() => {
