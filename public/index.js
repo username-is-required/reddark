@@ -1,5 +1,5 @@
 var audioSystem = {
-    playAudio: false,)
+    playAudio: false,
     
     audio: {
         madePrivate: new Audio('/audio/privated.mp3'),
