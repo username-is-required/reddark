@@ -96,11 +96,9 @@ socket.on('disconnect', function () {
 });
 socket.on("updatenew", (data) => {
     if (data.status == "private" || data.status == "restricted") {
-        console.log("NEW PRIVATE (o7): " + data.name);
-        dark++;
+        console.log("NEW PRIVATE (o7): " + data.name) {
     } else {
         console.log(":/ new public: " + data.name);
-        dark--;
     }
     updateSubreddit(data, true);
 })
@@ -139,8 +137,12 @@ function updateSubreddit(data, _new = false) {
             audioSystem.playPrivate();
         }
         subredditElement.classList.add("subreddit-private");
-
-    }else if (data.status == "restricted") {
+        if (subredditElement.classList.contains("subreddit-restricted")) {
+            subredditElement.classList.remove("subreddit-restricted");
+        } else {
+            dark++;
+        }
+    } else if (data.status == "restricted") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
             newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted!", function () {
                 doScroll(subredditElement);
@@ -148,6 +150,11 @@ function updateSubreddit(data, _new = false) {
             audioSystem.playPrivate();
         }
         subredditElement.classList.add("subreddit-restricted");
+        if (subredditElement.classList.contains("subreddit-private")) {
+            subredditElement.classList.remove("subreddit-private"));
+        } else {
+            dark++;
+        }
     } else {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
             newStatusUpdate("<strong>" + data.name + "</strong> has gone public.", function () {
@@ -156,7 +163,10 @@ function updateSubreddit(data, _new = false) {
             audioSystem.playPublic();
         }
         subredditElement.classList.remove("subreddit-private");
+        subredditElement.classList.remove("subreddit-restricted");
+        dark--;
     }
+    
     updateStatusText();
     subredditElement.querySelector("p").innerHTML = data.status;
 }
