@@ -75,7 +75,7 @@ async function appendList(url) {
         if (line.startsWith("##") && !line.includes("Please") && !line.includes("Combined") && !line.includes("Unique") && line.includes(":")) {
             if (section != []) subreddits_src[sectionname] = section;
             section = [];
-            sectionname = line.replace("##", "").trim();
+            sectionname = line.replace("##", "").replace(":", "").trim();
         }
         if (line.startsWith("r/")) {
             section.push(line.trim());
@@ -272,10 +272,10 @@ function updateStatus() {
         if (!firstCheck && requestErrorCount < 20) {
             // emit the reload signal if the config instructs
             // to reload clients following deployment
-            /*if (config.reloadClientsFollowingDeployment) {
+            if (config.reloadClientsFollowingDeployment) {
                 console.log("Client reload flag set, emitting reload signal");
                 io.emit("reload");
-            }*/
+            }
             
             //try and inject a message telling the others to reload
             /*var sneakySubredditListEdit = {};
