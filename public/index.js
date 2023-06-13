@@ -96,7 +96,7 @@ socket.on('disconnect', function () {
 });
 socket.on("updatenew", (data) => {
     if (data.status == "private" || data.status == "restricted") {
-        console.log("NEW PRIVATE (o7): " + data.name) {
+        console.log("NEW PRIVATE (o7): " + data.name);
     } else {
         console.log(":/ new public: " + data.name);
     }
