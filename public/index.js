@@ -131,7 +131,7 @@ function updateSubreddit(data, _new = false) {
     
     if (data.status == "private") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong> has gone private!", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone private!", "private", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPrivate();
@@ -144,7 +144,7 @@ function updateSubreddit(data, _new = false) {
         }
     } else if (data.status == "restricted") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted!", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted!", "restricted" function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPrivate();
@@ -157,7 +157,7 @@ function updateSubreddit(data, _new = false) {
         }
     } else {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong> has gone public.", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone public.", "public", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPublic();
@@ -219,9 +219,20 @@ function fillSubredditsList(data) {
 function updateStatusText() {
     document.getElementById("amount").innerHTML = "<strong>" + dark + "</strong><light>/" + amount + "</light> subreddits are currently dark.";
 }
-function newStatusUpdate(text, callback = null) {
+function newStatusUpdate(text, status, callback = null) {
     var item = Object.assign(document.createElement("div"), { "className": "status-update" });
-    item.classList.add("status-update-private");
+    switch (status) {
+        case "private":
+            item.classList.add("status-update-private");
+            break;
+        case "restricted":
+            item.classList.add("status-update-restricted");
+            break;
+        case "public":
+            item.classList.add("status-update-public");
+        default:
+            return;
+    }
     item.innerHTML = text;
     document.getElementById("statusupdates").appendChild(item);
     setTimeout(() => {
