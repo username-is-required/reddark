@@ -247,7 +247,7 @@ function updateStatus() {
                         // the subreddit is public but the app thinks it's private/restricted
                         privateCount--;
                         
-                        console.log("public: " + subreddits[section][subreddit].name + "(" + privateCount + ")");
+                        console.log("public: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
                         subreddits[section][subreddit].status = "public";
                         io.emit("updatenew", subreddits[section][subreddit]);
                     }
