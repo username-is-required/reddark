@@ -134,6 +134,7 @@ var currentlyRefreshing = false;
 var privateCount = 0;
 
 var countTimeout = null;
+var connectionsInLast5s = 0;
 
 //var reloadableClients = [];
 
@@ -160,11 +161,20 @@ io.on('connection', (socket) => {
     } else {
         socket.emit("subreddits", subreddits);
     }
+
+    connectionsInLast5s++;
     clearTimeout(countTimeout);
     countTimeout = setTimeout(() => {
         console.log('currently connected users: ' + io.engine.clientsCount /*+ " (" + reloadableClients.length + " reloadable)"*/);
-    }, 500);
-})
+    }, 750);
+});
+
+setInterval(() => {
+    if (connectionsInLast5s > 0) {
+        console.log("connections in last 5s: " + connectionsInLast5s);
+        connectionsInLast5s = 0;
+    }
+});
 
 server.listen(config.port, () => {
     console.log('listening on *:' + config.port);
