@@ -272,10 +272,10 @@ function updateStatus() {
         if (!firstCheck && requestErrorCount < 20) {
             // emit the reload signal if the config instructs
             // to reload clients following deployment
-            /*if (config.reloadClientsFollowingDeployment) {
+            if (config.reloadClientsFollowingDeployment) {
                 console.log("Client reload flag set, emitting reload signal");
                 io.emit("reload");
-            }*/
+            }
             
             //try and inject a message telling the others to reload
             /*var sneakySubredditListEdit = {};
