@@ -151,7 +151,7 @@ function updateSubreddit(data, _new = false) {
         }
         subredditElement.classList.add("subreddit-restricted");
         if (subredditElement.classList.contains("subreddit-private")) {
-            subredditElement.classList.remove("subreddit-private"));
+            subredditElement.classList.remove("subreddit-private");
         } else {
             dark++;
         }
