@@ -229,18 +229,14 @@ a {
     border: 2px #00ffaa;
 }
 
-/* need to work out the bg colors for these */
 .status-update-restricted {
-    background-color: #ffffff; /* to change */
+    background-color: #6b5834; /* to change */
     border: 2px #ffc42e;
 }
 
-/* and will grey really look good as an alert bg? */
-/* and will the white text below be readable? */
-/* then again if the bg is darker than the sub name color as w the others then it should be readable */
 .status-update-public {
-    background-color: #ffffff; /* to change */
-    border: 2px var(--text-muted);
+    background-color: #363b3f; /* to change */
+    border: 2px 88959f;
 }
 
 .button {
