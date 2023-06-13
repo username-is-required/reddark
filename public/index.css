@@ -199,7 +199,8 @@ a {
     display: none;
 }
 
-.hide-public .subreddit-private {
+.hide-public .subreddit-private,
+.hide-public .subreddit-restricted {
     display: inherit;
     text-shadow: none;
 }
