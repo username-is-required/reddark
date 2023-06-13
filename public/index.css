@@ -219,7 +219,7 @@ a {
 
 .status-update {
     pointer-events: all;
-    padding: 10px;
+    padding: 10px 20px;
     cursor: pointer;
     border-radius: 900px;
     --col: #41adff;
