@@ -224,7 +224,7 @@ a {
     border-radius: 900px;
     --col: #41adff;
     background: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6)), var(--col);
-    border: 2px var(--col);
+    border: 2px solid var(--col);
 }
 
 .status-update-private {
