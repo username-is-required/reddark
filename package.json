@@ -26,8 +26,5 @@
   },
   "scripts": {
     "start": "node main.js"
-  },
-  "eslintConfig": {
-    
   }
 }
