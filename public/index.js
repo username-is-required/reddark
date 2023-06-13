@@ -112,10 +112,10 @@ function doScroll(el) {
 // not alerting for these subs as they've been spamming
 // back and forth between private and public
 const subsToFilter = [
-    "r/bi_irl",
+    /*"r/bi_irl",
     "r/suddenlybi",
     "r/ennnnnnnnnnnnbbbbbby",
-    "r/seriouslyfuckspez"
+    "r/seriouslyfuckspez"*/
 ];
 
 function updateSubreddit(data, _new = false) {
