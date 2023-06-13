@@ -222,21 +222,21 @@ a {
     padding: 10px;
     cursor: pointer;
     border-radius: 900px;
+    --col: #41adff;
+    background: linear-gradient(0deg, rgba(0, 0, 0, 0.5), rgba(0, 0, 0, 0.6)), var(--col);
+    border: 2px var(--col);
 }
 
 .status-update-private {
-    background-color: #496058;
-    border: 2px #00ffaa;
+    --col: #00ffaa !important;
 }
 
 .status-update-restricted {
-    background-color: #6b5834;
-    border: 2px #ffc42e;
+    --col: #ffc42e !important;
 }
 
 .status-update-public {
-    background-color: #363b3f;
-    border: 2px #88959f;
+    --col: #88959f !important;
 }
 
 .button {
