@@ -144,7 +144,7 @@ function updateSubreddit(data, _new = false) {
         }
     } else if (data.status == "restricted") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted!", "restricted" function () {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted!", "restricted", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPrivate();
