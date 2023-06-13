@@ -32,10 +32,10 @@ document.getElementById("enable_sounds").addEventListener("click", function () {
         document.getElementById("enable_sounds").innerHTML = "Disable sound alerts"
         audioSystem.playAudio = true;
         audioSystem.playPrivate();
-        newStatusUpdate("Enabled audio alerts.", undefined);
+        newStatusUpdate("Enabled audio alerts.", null);
     } else {
         audioSystem.playAudio = false;
-        newStatusUpdate("Disabled audio alerts.", undefined);
+        newStatusUpdate("Disabled audio alerts.", null);
         document.getElementById("enable_sounds").innerHTML = "Enable sound alerts"
     }
 })
@@ -62,7 +62,7 @@ socket.on("subreddits-refreshed", (data) => {
     loaded = false;
     document.getElementById("list").innerHTML = "Loading...";
     fillSubredditsList(data);
-    newStatusUpdate("List of subreddits updated", undefined);
+    newStatusUpdate("List of subreddits updated", null);
 });
 
 socket.on("update", (data) => {
