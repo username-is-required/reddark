@@ -73,11 +73,11 @@ socket.on("update", (data) => {
 // (it *would* be handy to use after implementing restricted subs,
 // if i'd had the foresight to include it earlier);
 socket.on("reload", () => {
-    // reload the page in between 0-5s
+    // reload the page in between 0-20s
     // (staggered to hopefully not kill my server by way of an accidentsl ddos)
     setTimeout(() => {
         location.reload();
-    }, Math.floor(Math.random() * 10000));
+    }, Math.floor(Math.random() * 20000));
 });
 
 socket.on("loading", () => {
