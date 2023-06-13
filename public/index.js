@@ -221,6 +221,7 @@ function updateStatusText() {
 }
 function newStatusUpdate(text, callback = null) {
     var item = Object.assign(document.createElement("div"), { "className": "status-update" });
+    item.classList.add("status-update-private");
     item.innerHTML = text;
     document.getElementById("statusupdates").appendChild(item);
     setTimeout(() => {
