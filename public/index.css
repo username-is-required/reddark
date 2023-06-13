@@ -230,12 +230,12 @@ a {
 }
 
 .status-update-restricted {
-    background-color: #6b5834; /* to change */
+    background-color: #6b5834;
     border: 2px #ffc42e;
 }
 
 .status-update-public {
-    background-color: #363b3f; /* to change */
+    background-color: #363b3f;
     border: 2px 88959f;
 }
 
