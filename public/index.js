@@ -229,7 +229,6 @@ function newStatusUpdate(text, status, callback = null) {
             item.classList.add("status-update-restricted");
             break;
         case "public":
-        default:
             item.classList.add("status-update-public");
             break;
     }
