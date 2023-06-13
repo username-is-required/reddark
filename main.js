@@ -174,7 +174,7 @@ setInterval(() => {
         console.log("connections in last 5s: " + connectionsInLast5s);
         connectionsInLast5s = 0;
     }
-});
+}, 5000);
 
 server.listen(config.port, () => {
     console.log('listening on *:' + config.port);
