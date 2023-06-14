@@ -36,7 +36,7 @@ app.use(express.static('public'))
 // a function to fetch data from a url and validate that it is JSON
 // it is persistent and will keep trying until it gets valid JSON
 function fetchValidJsonData(url) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async resolve => {
         var data = await request.httpsGet(url);
         
         try {
@@ -45,25 +45,13 @@ function fetchValidJsonData(url) {
         } catch (err) {
             console.log("Request to Reddit errored (bad JSON) [will retry] - " + data);
             
-            // now we wait for 10 seconds and try it again!
+            // now we wait for 5 seconds and try it again!
             // 'resolving' the promise with...uhh, recursion
             setTimeout(async () => {
               data = await fetchValidJsonData(url);
               resolve(data);
-            }, 10000);
+            }, 5000);
         }
-    });
-}
-
-function a () {
-    return new Promise((resolve) => {
-        request.httpsGet("///").then((data) => {
-            
-        }).catch((err) => {
-            setTimeout(async () => }
-                 = await a();
-                return ;
-        });
     });
 }
 
@@ -192,7 +180,35 @@ server.listen(config.port, () => {
     console.log('listening on *:' + config.port);
 });
 
-
+// a helper function to 'load in' the statuses of a batch of subs
+// will call itself repeatedly until it has a **full valid response** for every sub
+// (this may or may not come back to haunt me)
+function loadSubredditBatchStatus(subNameBatch) {
+    const batchLoggingPrefix = "BATCH[start:" + subNameBatch[0] + "](" + subNameList.length + "): ";
+    
+    return new Promise(async resolve => { // not even giving it the parameter to reject lol
+        // send a request
+        const httpsReq = request.httpsGet("/api/info.json?sr_name=" + subNameBatch.join(",")).then(data => {
+            // check valid json
+            try {
+                data = JSON.parse(data);
+            } catch (e) {
+                console.log("batch(" + subNameBatch.length + ") starting " + subNameBatch[0] + ": Request to Reddit errored (bad JSON)");
+                // try again after 5s
+                setTimeout(() => {
+                    const result = await loadSubredditBatchStatus(subnameBatch);
+                    resolve(result);
+                }, 5000);
+            }
+        }).catch(err => {
+            // try again after 5s
+            setTimeout(() => {
+                const result = await loadSubredditBatchStatus(subnameBatch);
+                resolve(result);
+            }, 5000);
+        });
+    });
+}
 
 var checkCounter = 0;
 
@@ -203,32 +219,30 @@ function updateStatus() {
         // (probably also the anti-server-crasher tbf)
         var delayBetweenRequests = config.intervalBetweenRequests;
         
-        // keep count of the number of requests that errored
-        var requestErrorCount = 0;
-        
-        console.log("** Starting check " + (checkCounter + 1) + " **");
+        var batchLoadRequests = [];
         checkCounter++;
+        console.log("** Starting check " + checkCounter + " **");
         for (let section in subreddits) {
             // batch subreddits together so we can  request data on them in a single api call
             var subredditBatch = [];
             
-            for (let subreddit in subreddits[section]) {
-                subredditBatch.push(subreddit);
+            for (let subIndex in subreddits[section]) {
+                subredditBatch.push(subreddits[section][subIndex].name.substring(2));
+                
                 // if the batch is full, or the section is complete
-                if (subredditBatch.length == 100 || subredditBatch.length == subreddits[section]) {
-                    
-                    
+                if (subredditBatch.length == 100 || subIndex == subreddits[section].length - 1) {
+                    // gets the batch loading
+                    const batchLoadPromise = loadSubredditBatchStatus(subredditBatch);
+
+                    // empty the current batch
                     subredditBatch = [];
+
+                    batchLoadRequests.push(batchLoadPromise);
+                
+                    // wait between requests
+                    await wait(delayBetweenRequests);
                 }
                 const httpsReq = request.httpsGet("/" + subreddits[section][subreddit].name + ".json").then((data) => {
-                    try {
-                        data = JSON.parse(data);
-                    } catch (err) {
-                        console.log(subreddits[section][subreddit].name + ": Request to Reddit errored (bad JSON), likely rate limited");
-                        requestErrorCount++;
-                        // error handling? the app will assume the sub is public
-                        return;
-                    }
                     
                     if (typeof (data['message']) != "undefined" && data['error'] == 500) {
                         console.log(subreddits[section][subreddit].name + ": Request to Reddit errored (500) - " + data);
@@ -285,21 +299,14 @@ function updateStatus() {
                     }
                     
                     // error handling? the app will assume the sub is public
-                });
-                
-                //console.log(subreddits[section][subreddit].name + ": request sent with delay: " + delayBetweenRequests);
-                httpsRequests.push(httpsReq);
-                
-                // wait between requests
-                await wait(delayBetweenRequests);
-                
-                //delayBetweenRequests++;
+                })lllikkkk
             }
         }
+
+        // wait for them all to complete
+        await Promise.all(batchLoadRequests);
         
-        await Promise.all(httpsRequests);
-        
-        console.log("All requests for check " + (checkCounter + 1) + " completed");
+        console.log("All batched requests for check " + (checkCounter + 1) + " completed");
         console.log(config.updateInterval + "ms until next check");
         
         // all requests have now either been completed or errored
