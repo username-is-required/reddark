@@ -329,11 +329,11 @@ function updateStatus() {
         // wait for them all to complete
         await Promise.all(batchLoadRequests);
         
-        console.log("All batched requests for check " + (checkCounter + 1) + " completed");
+        console.log("All batched requests for check " + checkCounter + " complete");
         console.log(config.updateInterval + "ms until next check");
         
         // all requests have now either been completed or errored
-        if (!firstCheck && requestErrorCount < 20) {
+        if (!firstCheck) {
             // emit the reload signal if the config instructs
             // to reload clients following deployment
             if (config.reloadClientsFollowingDeployment) {
@@ -347,7 +347,7 @@ function updateStatus() {
         
         // this statement will trigger if this is the first call to updateStatus
         // since the subreddit list refreshed
-        if (currentlyRefreshing && requestErrorCount < 20) {
+        if (currentlyRefreshing) {
             io.emit("subreddits-refreshed", subreddits);
             console.log("Emitted the refreshed list of subreddits");
             
