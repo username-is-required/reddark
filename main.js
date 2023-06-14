@@ -249,7 +249,9 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                         break;
                     case "public":
                         if (["private", "restricted"].includes(knownSubStatus)) {
-                            
+                            privateCount--;
+                            // flag a status change
+                            statusChanged = true;
                         }
                         break;
                 }
