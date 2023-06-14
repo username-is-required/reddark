@@ -206,6 +206,22 @@ function loadSubredditBatchStatus(subNameBatch) {
             
             // loop through the sub responses
             for (let subResponse of subResponses) {
+                // simplify things a bit
+                const data = subResponse["data"];
+                
+                // hello, what's your name, and is it one we were expecting
+                const subName = data["display_name_prefixed"];
+                const subIndexInBatch = subNameBatch.indexOf(subName);
+
+                if (subIndexInBatch == -1) {
+                    // why the hell do we have a sub we didn't request
+                    throw new Error("unexpected sub [" + subName + "] in batch response");
+                }
+
+                // remove the sub name from the batch array
+                // as a way of keeping track of which subs we've received data for
+                subNameBatch.splice(subIndexInBatch, 1);
+                
                 // check it has a valid `subreddit_type` property
                 const subType = subResponse["data"]["subreddit_type"];
 
