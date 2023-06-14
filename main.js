@@ -221,6 +221,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
 
                 // get the sub's currently recorded status
                 const knownSubStatus = subreddits[sectionIndex][subIndex]["status"];
+                var statusChanged = false;
 
                 // sub status logic
                 switch (subStatus) {
@@ -229,8 +230,12 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                             case "public":
                                 // sub now private, app thinks it's something elss
                                 privateCount++; // deliberately no break after this line
+                                
                             case "restricted":
-
+                                // update the status in our variable and emit to clients
+                                subreddits[sectionIndex][subIndex]["status"] = "private";
+                                
+                                if (firstCheck) console.log("private: " + subName + " (" + privateCount + ")");
                                 break;
                         }
                         break;
@@ -240,6 +245,15 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                     case "public":
                         
                         break;
+                }
+
+                // if the sub's changed status, emit & log as such
+                if (statusChanged) {
+                    if (firstCheck) {
+                        
+                    } else {
+                        
+                    }
                 }
             }
             
@@ -302,9 +316,7 @@ function updateStatus() {
                     
                     //console.log("successful response for " + subreddits[section][subreddit].name);
                     
-                    if (typeof (data['reason']) != "undefined" && data['reason'] == "private" && subreddits[section][subreddit].status != "private") {
-                        // the subreddit is private and the app doesn't know about it yet
-                        if (subreddits[section][subreddit].status != "restricted") privateCount++;
+                    if (typeof (data['reason']) != "undefined" && data['reason'] == "private" && subreddits[section][subreddit].status != "
                         
                         if (firstCheck) console.log("private: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
                         
