@@ -55,6 +55,18 @@ function fetchValidJsonData(url) {
     });
 }
 
+function a () {
+    return new Promise((resolve) => {
+        request.httpsGet("///").then((data) => {
+            
+        }).catch((err) => {
+            setTimeout(async () => }
+                 = await a();
+                return ;
+        });
+    });
+}
+
 var subreddits_src = {
 
 }
