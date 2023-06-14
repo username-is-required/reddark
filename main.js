@@ -78,7 +78,9 @@ async function appendList(url) {
             sectionname = line.replace("##", "").replace(":", "").trim();
         }
         if (line.startsWith("r/")) {
-            section.push(line.trim());
+            // exclude a single nonexistent sub that seems to be on the list for some reason
+            const subName = line.trim();
+            if (subName != "r/speziscool") section.push(line.trim());
         }
     }
     
