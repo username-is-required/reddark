@@ -141,7 +141,7 @@ function updateSubreddit(data, _new = false) {
     
     if (data.status == "private") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong> has gone private (from " + prevStatus + ")!", "private", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone private! (from " + prevStatus + ")", "private", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPrivate();
@@ -154,7 +154,7 @@ function updateSubreddit(data, _new = false) {
         }
     } else if (data.status == "restricted") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted (from " + prevStatus + ")!", "restricted", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted! (from " + prevStatus + ")", "restricted", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPrivate();
