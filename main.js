@@ -191,6 +191,9 @@ setInterval(() => {
 server.listen(config.port, () => {
     console.log('listening on *:' + config.port);
 });
+
+
+
 var checkCounter = 0;
 
 function updateStatus() {
@@ -203,11 +206,20 @@ function updateStatus() {
         // keep count of the number of requests that errored
         var requestErrorCount = 0;
         
-        var httpsRequests = [];
         console.log("** Starting check " + (checkCounter + 1) + " **");
         checkCounter++;
         for (let section in subreddits) {
+            // batch subreddits together so we can  request data on them in a single api call
+            var subredditBatch = [];
+            
             for (let subreddit in subreddits[section]) {
+                subredditBatch.push(subreddit);
+                // if the batch is full, or the section is complete
+                if (subredditBatch.length == 100 || subredditBatch.length == subreddits[section]) {
+                    
+                    
+                    subredditBatch = [];
+                }
                 const httpsReq = request.httpsGet("/" + subreddits[section][subreddit].name + ".json").then((data) => {
                     try {
                         data = JSON.parse(data);
