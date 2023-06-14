@@ -256,8 +256,10 @@ function updateStatus() {
                     
                     if (err.message == "timed out") {
                         console.log(subreddits[section][subreddit].name + ": Request to Reddit timed out");
-                    } else if (err.message.includes("TypeError")) {
+                    } else if (err.message.includes("reading 'data'")) {
                         //probally public & is a troll sub
+                        requestErrorCount--;
+                        privateCount--;
                         console.log("public: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
                     } else {
                         console.log(subreddits[section][subreddit].name + ": Request to Reddit errored - " + err);
