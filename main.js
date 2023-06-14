@@ -36,7 +36,7 @@ app.use(express.static('public'))
 // a function to fetch data from a url and validate that it is JSON
 // it is persistent and will keep trying until it gets valid JSON
 function fetchValidJsonData(url) {
-    return new Promise(async (resolve, reject) => {
+    return new Promise(async resolve => {
         var data = await request.httpsGet(url);
         
         try {
@@ -45,12 +45,12 @@ function fetchValidJsonData(url) {
         } catch (err) {
             console.log("Request to Reddit errored (bad JSON) [will retry] - " + data);
             
-            // now we wait for 10 seconds and try it again!
+            // now we wait for 5 seconds and try it again!
             // 'resolving' the promise with...uhh, recursion
             setTimeout(async () => {
               data = await fetchValidJsonData(url);
               resolve(data);
-            }, 10000);
+            }, 5000);
         }
     });
 }
@@ -78,7 +78,10 @@ async function appendList(url) {
             sectionname = line.replace("##", "").replace(":", "").trim();
         }
         if (line.startsWith("r/")) {
-            section.push(line.trim());
+            // exclude a single nonexistent sub that seems to be on the list for some reason
+            var subName = line.trim();
+            if (subName.slice(-1) == "/") subName = subName.slice(0, -1);
+            if (subName != "r/speziscool") section.push(subName);
         }
     }
     
@@ -139,21 +142,6 @@ var connectionsInLast5s = 0;
 //var reloadableClients = [];
 
 io.on('connection', (socket) => {
-    // listen for the client-info event
-    /*socket.once("client-info", (data) => {
-        if (data == undefined) return;
-        if (data.reloadable != undefined && data.reloadable == true) {
-            // this client is reloadable
-            reloadableClients.push(socket.id);
-            
-            // listen for disconnect to decrement reloadableClients
-            socket.once("disconnect", () => {
-                const index = reloadableClients.indexOf(socket.id);
-                reloadableClients.splice(index, 1);
-            });
-        }
-    });*/
-    
     if (firstCheck == false) {
         socket.emit("loading");
     } else if (currentlyRefreshing) {
@@ -179,6 +167,139 @@ setInterval(() => {
 server.listen(config.port, () => {
     console.log('listening on *:' + config.port);
 });
+
+// a helper function to 'load in' the statuses of a batch of subs
+// will call itself repeatedly until it has a **full valid response** for every sub
+// (this may or may not come back to haunt me)
+function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
+    const batchLoggingPrefix = "BATCH[start:" + subNameBatch[0] + "](" + subNameBatch.length + "): ";
+    const subNameBatchPreserved = subNameBatch.slice();
+    
+    return new Promise( resolve => { // not even giving it the parameter to reject lol
+        // send a request
+        const httpsReq = request.httpsGet("/api/info.json?sr_name=" + subNameBatch.join(",")).then(data => {
+            // check valid json
+            try {
+                data = JSON.parse(data);
+            } catch (e) {
+                //console.log(batchLoggingPrefix + "Request to Reddit errored (bad JSON) (will retry in 5s)");
+                throw new Error("bad JSON");
+            }
+            
+            if (typeof (data['message']) != "undefined" && data['error'] == 500) {
+                //console.log(batchLoggingPrefix + "Request to Reddit errored (500) (will retry in 5s) - " + data);
+                throw new Error("500 :: " + data);
+            }
+
+            const subResponses = data["data"]["children"];
+            
+            // loop through the sub responses
+            for (let subResponse of subResponses) {
+                // simplify things a bit
+                const data = subResponse["data"];
+                
+                // hello, what's your name, and is it one we were expecting
+                const subIndexInBatch = subNameBatch.findIndex(el => {
+                    return el.toLowerCase() == data["display_name"].toLowerCase();
+                });
+                const subName = data["display_name_prefixed"];
+
+                if (subIndexInBatch == -1) {
+                    // why the hell do we have a sub we didn't request
+                    throw new Error("unexpected sub [" + subName + "] in batch response");
+                }
+
+                // remove the sub name from the batch array
+                // as a way of keeping track of which subs we've received data for
+                subNameBatch.splice(subIndexInBatch, 1);
+                
+                // check it has a valid `subreddit_type` property
+                const subStatus = subResponse["data"]["subreddit_type"];
+
+                if (!["private", "restricted", "public"].includes(subStatus)) {
+                    throw new Error("status for [" + subName + "] not one of the expected values");
+                }
+                
+                // find this sub's index in the section array
+                const subIndex = subreddits[sectionIndex].findIndex(el => {
+                    return el["name"].toLowerCase() == subName.toLowerCase();
+                });
+
+                // get the sub's currently recorded status
+                const knownSubStatus = subreddits[sectionIndex][subIndex]["status"];
+                var statusChanged = false;
+
+                // sub status logic
+                switch (subStatus) {
+                    case "private":
+                        switch (knownSubStatus) {
+                            case "public":
+                                // sub now private, app thinks it's something elss
+                                privateCount++; // deliberately no break after this line
+                            case "restricted":
+                                // flag a status change
+                                statusChanged = true;
+                                break;
+                        }
+                        break;
+                    case "restricted":
+                        switch (knownSubStatus) {
+                            case "public":
+                                // sub now restricted, app thinks it's something elss
+                                privateCount++; // deliberately no break after this line
+                            case "private":
+                                // flag a status change
+                                statusChanged = true;
+                                break;
+                        }
+                        break;
+                    case "public":
+                        if (["private", "restricted"].includes(knownSubStatus)) {
+                            privateCount--;
+                            // flag a status change
+                            statusChanged = true;
+                        }
+                        break;
+                }
+
+                // if the sub's changed status, emit & log as such
+                if (statusChanged) {
+                    // update the status in our list
+                    subreddits[sectionIndex][subIndex]["status"] = subStatus;
+                 
+                    if (firstCheck) {
+                        io.emit("updatenew", subreddits[sectionIndex][subIndex]);
+                        console.log(subStatus + ": " + subName + " (" + privateCount + ")");
+                    } else {
+                        io.emit("update", subreddits[sectionIndex][subIndex]);
+                    }
+                }
+            }
+            
+            // if there are any subs left in the batch array, we didn't get data for them
+            // and that's a problem
+            if (subNameBatch.length > 0) {
+                throw new Error("no data for " + subNameBatch.length + " subs: [" + subNameBatch.join(", ") + "]");
+            }
+
+            // if we get here, this batch should be sucessfully completed!
+            resolve();
+        }).catch(err => {
+            if (err.message == "timed out") {
+                console.log(batchLoggingPrefix + "Request to Reddit timed out (will retry in 5s)");
+            } else {
+                console.log(batchLoggingPrefix + "Request to Reddit errored (will retry in 5s) - " + err);
+            }
+            
+            // try again after 5s
+            setTimeout(async () => {
+                const result = await loadSubredditBatchStatus(subNameBatchPreserved, sectionIndex);
+                resolve(result);
+            }, 5000);
+        });
+    });
+}
+
 var checkCounter = 0;
 
 function updateStatus() {
@@ -188,98 +309,40 @@ function updateStatus() {
         // (probably also the anti-server-crasher tbf)
         var delayBetweenRequests = config.intervalBetweenRequests;
         
-        // keep count of the number of requests that errored
-        var requestErrorCount = 0;
-        
-        var httpsRequests = [];
-        console.log("** Starting check " + (checkCounter + 1) + " **");
+        var batchLoadRequests = [];
         checkCounter++;
+        console.log("** Starting check " + checkCounter + " **");
         for (let section in subreddits) {
-            for (let subreddit in subreddits[section]) {
-                const httpsReq = request.httpsGet("/" + subreddits[section][subreddit].name + ".json").then((data) => {
-                    try {
-                        data = JSON.parse(data);
-                    } catch (err) {
-                        console.log(subreddits[section][subreddit].name + ": Request to Reddit errored (bad JSON), likely rate limited");
-                        requestErrorCount++;
-                        // error handling? the app will assume the sub is public
-                        return;
-                    }
-                    
-                    if (typeof (data['message']) != "undefined" && data['error'] == 500) {
-                        console.log(subreddits[section][subreddit].name + ": Request to Reddit errored (500) - " + data);
-                        requestErrorCount++;
-                        // error handling? the app will assume the sub is public
-                        return;
-                    }
-                    
-                    //console.log("successful response for " + subreddits[section][subreddit].name);
-                    
-                    if (typeof (data['reason']) != "undefined" && data['reason'] == "private" && subreddits[section][subreddit].status != "private") {
-                        // the subreddit is private and the app doesn't know about it yet
-                        if (subreddits[section][subreddit].status != "restricted") privateCount++;
-                        
-                        if (firstCheck) console.log("private: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
-                        
-                        subreddits[section][subreddit].status = "private";
-                        if (firstCheck == false) {
-                            io.emit("update", subreddits[section][subreddit]);
-                        } else {
-                            io.emit("updatenew", subreddits[section][subreddit]);
-                        }
-                    } else if (data['data'] && data['data']['children'][0]['data']['subreddit_type'] == "restricted" && subreddits[section][subreddit].status != "restricted"){
-                        // the subreddit is restricted and the app doesn't know about it yet
-                        if (subreddits[section][subreddit].status != "private") privateCount++;
-                        
-                        if (firstCheck) console.log("restricted: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
-                        
-                        subreddits[section][subreddit].status = "restricted";
-                        if (firstCheck == false) {
-                            io.emit("update", subreddits[section][subreddit]);
-                        } else {
-                            io.emit("updatenew", subreddits[section][subreddit]);
-                        }
-                        
-                    } else if (
-                        (subreddits[section][subreddit].status == "private" && typeof (data['reason']) == "undefined")
-                        || (subreddits[section][subreddit].status == "restricted" && data['data'] && data['data']['children'][0]['data']['subreddit_type'] == "public")
-                    ) {
-                        // the subreddit is public but the app thinks it's private/restricted
-                        privateCount--;
-                        
-                        console.log("public: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
-                        subreddits[section][subreddit].status = "public";
-                        io.emit("updatenew", subreddits[section][subreddit]);
-                    }
-                }).catch((err) => {
-                    requestErrorCount++;
-                    
-                    if (err.message == "timed out") {
-                        console.log(subreddits[section][subreddit].name + ": Request to Reddit timed out");
-                    } else {
-                        console.log(subreddits[section][subreddit].name + ": Request to Reddit errored - " + err);
-                    }
-                    
-                    // error handling? the app will assume the sub is public
-                });
+            // batch subreddits together so we can  request data on them in a single api call
+            var subredditBatch = [];
+            
+            for (let subIndex in subreddits[section]) {
+                subredditBatch.push(subreddits[section][subIndex].name.substring(2));
                 
-                //console.log(subreddits[section][subreddit].name + ": request sent with delay: " + delayBetweenRequests);
-                httpsRequests.push(httpsReq);
+                // if the batch is full, or the section is complete
+                if (subredditBatch.length == 100 || subIndex == subreddits[section].length - 1) {
+                    // gets the batch loading
+                    const batchLoadPromise = loadSubredditBatchStatus(subredditBatch, section);
+
+                    // empty the current batch
+                    subredditBatch = [];
+
+                    batchLoadRequests.push(batchLoadPromise);
                 
-                // wait between requests
-                await wait(delayBetweenRequests);
-                
-                //delayBetweenRequests++;
+                    // wait between requests
+                    await wait(delayBetweenRequests);
+                }
             }
         }
+
+        // wait for them all to complete
+        await Promise.all(batchLoadRequests);
         
-        await Promise.all(httpsRequests);
-        
-        console.log("All requests for check " + (checkCounter + 1) + " completed");
+        console.log("All batched requests for check " + checkCounter + " complete");
         console.log(config.updateInterval + "ms until next check");
         
         // all requests have now either been completed or errored
-        if (!firstCheck && requestErrorCount < 20) {
+        if (!firstCheck) {
             // emit the reload signal if the config instructs
             // to reload clients following deployment
             if (config.reloadClientsFollowingDeployment) {
@@ -287,51 +350,13 @@ function updateStatus() {
                 io.emit("reload");
             }
             
-            //try and inject a message telling the others to reload
-            /*var sneakySubredditListEdit = {};
-            
-            sneakySubredditListEdit[
-                "There is a new version of this site available - please refresh the page!"
-            ] = [];
-            
-            for (var section in subreddits) {
-                sneakySubredditListEdit[section] = subreddits[section];
-            }
-            
-            for (const [id, socket] of io.sockets.sockets) {
-                if (reloadableClients.includes(id)) {
-                    socket.emit("subreddits", subreddits);
-                } else {
-                    socket.emit("subreddits", sneakySubredditListEdit);
-                }
-            }*/
-            
             io.emit("subreddits", subreddits);
             firstCheck = true;
         }
         
         // this statement will trigger if this is the first call to updateStatus
         // since the subreddit list refreshed
-        if (currentlyRefreshing && requestErrorCount < 20) {
-            //try and inject a message telling the others to reload
-            /*var sneakySubredditListEdit = {};
-            
-            sneakySubredditListEdit[
-                "There is a new version of this site available - please refresh the page!"
-            ] = [];
-            
-            for (var section in subreddits) {
-                sneakySubredditListEdit[section] = subreddits[section];
-            }
-            
-            for (const [id, socket] of io.sockets.sockets) {
-                if (reloadableClients.includes(id)) {
-                    socket.emit("subreddits-refreshed", subreddits);
-                } else {
-                    socket.emit("subreddits-refreshed", sneakySubredditListEdit);
-                }
-            }*/
-            
+        if (currentlyRefreshing) {
             io.emit("subreddits-refreshed", subreddits);
             console.log("Emitted the refreshed list of subreddits");
             
