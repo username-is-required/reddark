@@ -231,28 +231,39 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                                 // sub now private, app thinks it's something elss
                                 privateCount++; // deliberately no break after this line
                             case "restricted":
-                                // update the status in our variable and emit to clients
-                                subreddits[sectionIndex][subIndex]["status"] = "private";
+                                // flag a status change
                                 statusChanged = true;
                                 break;
                         }
                         break;
-                    case "restricted";
-                        
+                    case "restricted":
+                        switch (knownSubStatus) {
+                            case "public":
+                                // sub now restricted, app thinks it's something elss
+                                privateCount++; // deliberately no break after this line
+                            case "private":
+                                // flag a status change
+                                statusChanged = true;
+                                break;
+                        }
                         break;
                     case "public":
-                        
+                        if (["private", "restricted"].includes(knownSubStatus)) {
+                            
+                        }
                         break;
                 }
 
                 // if the sub's changed status, emit & log as such
                 if (statusChanged) {
+                    // update the status in our list
+                    subreddits[sectionIndex][subIndex]["status"] = subStatus;
+                 
                     if (firstCheck) {
-                        
-                        
+                        io.emit("updatenew", subreddits[sectionIndex][subIndex]);
                         console.log(subStatus + ": " + subName + " (" + privateCount + ")");
                     } else {
-                        
+                        io.emit("update", subreddits[sectionIndex][subIndex]);
                     }
                 }
             }
