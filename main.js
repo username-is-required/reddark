@@ -198,7 +198,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 
                 // hello, what's your name, and is it one we were expecting
                 const subIndexInBatch = subNameBatch.indexOf(data["display_name"]);
-                const subName = + data["display_name_prefixed"];
+                const subName = data["display_name_prefixed"];
 
                 if (subIndexInBatch == -1) {
                     // why the hell do we have a sub we didn't request
