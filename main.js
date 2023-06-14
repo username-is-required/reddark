@@ -218,7 +218,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 if (!["private", "restricted", "public"].includes(subStatus)) {
                     throw new Error("status for [" + subName + "] not one of the expected values");
                 }
-
+                console.log(sectionIndex);
                 // find this sub's index in the section array
                 const subIndex = subreddits[sectionIndex].findIndex(el => {
                     return el["name"].toLowerCase() == subName.toLowerCase();
