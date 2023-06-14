@@ -160,7 +160,7 @@ function updateSubreddit(data, _new = false) {
     } else if (data.status == "restricted") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
             var statusUpdateText = "<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>restricted</strong>";
-            if (prevStatus != "public") statusUpdateText += "!";
+            if (prevStatus != "private") statusUpdateText += "!";
             
             newStatusUpdate(statusUpdateText, "restricted", function () {
                 doScroll(subredditElement);
