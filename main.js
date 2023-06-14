@@ -259,7 +259,6 @@ function updateStatus() {
                     } else if (err.message.includes("reading 'data'")) {
                         //probally public & is a troll sub
                         requestErrorCount--;
-                        privateCount--;
                         console.log("public: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
                     } else {
                         console.log(subreddits[section][subreddit].name + ": Request to Reddit errored - " + err);
