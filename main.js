@@ -218,7 +218,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 if (!["private", "restricted", "public"].includes(subStatus)) {
                     throw new Error("status for [" + subName + "] not one of the expected values");
                 }
-                console.log(sectionIndex);
+                
                 // find this sub's index in the section array
                 const subIndex = subreddits[sectionIndex].findIndex(el => {
                     return el["name"].toLowerCase() == subName.toLowerCase();
@@ -318,7 +318,7 @@ function updateStatus() {
                 // if the batch is full, or the section is complete
                 if (subredditBatch.length == 100 || subIndex == subreddits[section].length - 1) {
                     // gets the batch loading
-                    const batchLoadPromise = loadSubredditBatchStatus(subredditBatch, subIndex);
+                    const batchLoadPromise = loadSubredditBatchStatus(subredditBatch, section);
 
                     // empty the current batch
                     subredditBatch = [];
