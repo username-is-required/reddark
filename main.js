@@ -171,7 +171,7 @@ server.listen(config.port, () => {
 // will call itself repeatedly until it has a **full valid response** for every sub
 // (this may or may not come back to haunt me)
 function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
-    const batchLoggingPrefix = "BATCH[start:" + subNameBatch[0] + "](" + subNameList.length + "): ";
+    const batchLoggingPrefix = "BATCH[start:" + subNameBatch[0] + "](" + subNameBatch.length + "): ";
     
     return new Promise( resolve => { // not even giving it the parameter to reject lol
         // send a request
