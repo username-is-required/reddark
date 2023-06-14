@@ -79,8 +79,9 @@ async function appendList(url) {
         }
         if (line.startsWith("r/")) {
             // exclude a single nonexistent sub that seems to be on the list for some reason
-            const subName = line.trim();
-            if (subName != "r/speziscool") section.push(line.trim());
+            var subName = line.trim();
+            if (subName.slice(-1) == "/") subName = subName.slice(0, -1);
+            if (subName != "r/speziscool") section.push(subName);
         }
     }
     
@@ -205,8 +206,6 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
 
                 if (subIndexInBatch == -1) {
                     // why the hell do we have a sub we didn't request
-                    console.log(subNameBatch);
-                    console.log(data["display_name"]);
                     throw new Error("unexpected sub [" + subName + "] in batch response");
                 }
 
