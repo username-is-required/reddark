@@ -142,8 +142,8 @@ function updateSubreddit(data, _new = false) {
     if (data.status == "private") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
             var statusUpdateText = "<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>private</strong>";
-            
             if (prevStatus != "restricted") statusUpdateText += "!";
+            
             newStatusUpdate(statusUpdateText, "private", function () {
                 doScroll(subredditElement);
             })
