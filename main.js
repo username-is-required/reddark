@@ -205,6 +205,8 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
 
                 if (subIndexInBatch == -1) {
                     // why the hell do we have a sub we didn't request
+                    console.log(subNameBatch);
+                    console.log(data["display_name"]);
                     throw new Error("unexpected sub [" + subName + "] in batch response");
                 }
 
