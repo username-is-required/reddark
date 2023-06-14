@@ -197,7 +197,9 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 const data = subResponse["data"];
                 
                 // hello, what's your name, and is it one we were expecting
-                const subIndexInBatch = subNameBatch.indexOf(data["display_name"]);
+                const subIndexInBatch = subNameBatch.findIndex(el => {
+                    return el.toLowerCase() == data["display_name"].toLowerCase();
+                });
                 const subName = data["display_name_prefixed"];
 
                 if (subIndexInBatch == -1) {
