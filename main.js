@@ -220,7 +220,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
 
                 // find this sub's index in the section array
                 const subIndex = subreddits[sectionIndex].findIndex(el => {
-                    return el["name"] == subName;
+                    return el["name"].toLowerCase() == subName.toLowerCase();
                 });
 
                 // get the sub's currently recorded status
