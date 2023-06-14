@@ -281,6 +281,9 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
             if (subNameBatch.length > 0) {
                 throw new Error("no data for " + subNameBatch.length + " subs: [" + subNameBatch.join(", ") + "]");
             }
+
+            // if we get here, this batch should be sucessfully completed!
+            resolve();
         }).catch(err => {
             if (err.message == "timed out") {
                 console.log(batchLoggingPrefix + "Request to Reddit timed out (will retry in 5s)");
