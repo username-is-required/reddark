@@ -223,18 +223,31 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 subNameBatch.splice(subIndexInBatch, 1);
                 
                 // check it has a valid `subreddit_type` property
-                const subType = subResponse["data"]["subreddit_type"];
+                const subStatus = subResponse["data"]["subreddit_type"];
 
-                if (!["private", "restricted", "public"].includes(subType)) {
-                    throw new Error("sub type for [" + subName + "] not one of the expected values");
+                if (!["private", "restricted", "public"].includes(subStatus)) {
+                    throw new Error("status for [" + subName + "] not one of the expected values");
                 }
 
                 // find this sub's index in the section array
-                const subIndexInSection = subreddits[sectionIndex].indexOf(
-                
-                switch (subType) {
+                const subIndex = subreddits[sectionIndex].findIndex(el => {
+                    return el["name"] == subName;
+                });
+
+                // get the sub's currently recorded status
+                const knownSubStatus = subreddits[sectionIndex][subIndex]["status"];
+
+                // sub status logic
+                switch (subStatus) {
                     case "private":
-                        
+                        switch (knownSubStatus) {
+                            case "public":
+                                // sub now private, app thinks it's something elss
+                                privateCount++; // deliberately no break after this line
+                            case "restricted":
+
+                                break;
+                        }
                         break;
                     case "restricted";
                         
