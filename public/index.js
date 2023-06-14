@@ -141,7 +141,7 @@ function updateSubreddit(data, _new = false) {
     
     if (data.status == "private") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong><br>" + prevStatus + " → private", "private", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>private</strong>!", "private", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPrivate();
@@ -154,7 +154,7 @@ function updateSubreddit(data, _new = false) {
         }
     } else if (data.status == "restricted") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong><br>" + prevStatus + " → restricted", "restricted", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>restricted</strong>!", "restricted", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPrivate();
@@ -167,7 +167,7 @@ function updateSubreddit(data, _new = false) {
         }
     } else {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong><br>" + prevStatus + " → public", "public", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>public</strong> :(", "public", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPublic();
