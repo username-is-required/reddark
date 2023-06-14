@@ -230,12 +230,10 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                             case "public":
                                 // sub now private, app thinks it's something elss
                                 privateCount++; // deliberately no break after this line
-                                
                             case "restricted":
                                 // update the status in our variable and emit to clients
                                 subreddits[sectionIndex][subIndex]["status"] = "private";
-                                
-                                if (firstCheck) console.log("private: " + subName + " (" + privateCount + ")");
+                                statusChanged = true;
                                 break;
                         }
                         break;
@@ -251,6 +249,8 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 if (statusChanged) {
                     if (firstCheck) {
                         
+                        
+                        console.log(subStatus + ": " + subName + " (" + privateCount + ")");
                     } else {
                         
                     }
