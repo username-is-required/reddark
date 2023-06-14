@@ -183,7 +183,7 @@ server.listen(config.port, () => {
 // a helper function to 'load in' the statuses of a batch of subs
 // will call itself repeatedly until it has a **full valid response** for every sub
 // (this may or may not come back to haunt me)
-function loadSubredditBatchStatus(subNameBatch) {
+function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
     const batchLoggingPrefix = "BATCH[start:" + subNameBatch[0] + "](" + subNameList.length + "): ";
     
     return new Promise( resolve => { // not even giving it the parameter to reject lol
@@ -210,8 +210,8 @@ function loadSubredditBatchStatus(subNameBatch) {
                 const data = subResponse["data"];
                 
                 // hello, what's your name, and is it one we were expecting
-                const subName = data["display_name_prefixed"];
-                const subIndexInBatch = subNameBatch.indexOf(subName);
+                const subIndexInBatch = subNameBatch.indexOf(data["display_name"]);
+                const subName = + data["display_name_prefixed"];
 
                 if (subIndexInBatch == -1) {
                     // why the hell do we have a sub we didn't request
@@ -226,8 +226,11 @@ function loadSubredditBatchStatus(subNameBatch) {
                 const subType = subResponse["data"]["subreddit_type"];
 
                 if (!["private", "restricted", "public"].includes(subType)) {
-                    throw new Error("sub type not one of the expected values");
+                    throw new Error("sub type for [" + subName + "] not one of the expected values");
                 }
+
+                // find this sub's index in the section array
+                const subIndexInSection = subreddits[sectionIndex].indexOf(
                 
                 switch (subType) {
                     case "private":
@@ -241,6 +244,12 @@ function loadSubredditBatchStatus(subNameBatch) {
                         break;
                 }
             }
+            
+            // if there are any subs left in the batch array, we didn't get data for them
+            // and that's a problem
+            if (subNameBatch.length > 0) {
+                throw new Error("no data for " + subNameBatch.length + " subs: [" + subNameBatch.join(", ") + "]");
+            }
         }).catch(err => {
             if (err.message == "timed out") {
                 console.log(batchLoggingPrefix + "Request to Reddit timed out (will retry in 5s)");
@@ -250,7 +259,7 @@ function loadSubredditBatchStatus(subNameBatch) {
             
             // try again after 5s
             setTimeout(async () => {
-                const result = await loadSubredditBatchStatus(subNameBatch);
+                const result = await loadSubredditBatchStatus(subNameBatch, sectionIndex);
                 resolve(result);
             }, 5000);
         });
@@ -279,7 +288,7 @@ function updateStatus() {
                 // if the batch is full, or the section is complete
                 if (subredditBatch.length == 100 || subIndex == subreddits[section].length - 1) {
                     // gets the batch loading
-                    const batchLoadPromise = loadSubredditBatchStatus(subredditBatch);
+                    const batchLoadPromise = loadSubredditBatchStatus(subredditBatch, subIndex);
 
                     // empty the current batch
                     subredditBatch = [];
