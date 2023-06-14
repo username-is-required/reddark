@@ -128,36 +128,46 @@ function updateSubreddit(data, _new = false) {
         console.log("Skipped over " + data.name + " going " + data.status + ": not in list");
         return;
     }
+
+    var prevStatus = "";
+
+    if (subredditElement.classList.contains("subreddit-private")) {
+        prevStatus = "private";
+    } else if (subredditElement.classList.contains("subreddit-restricted")) {
+        prevStatus = "restricted";
+    } else {
+        prevStatus = "public";
+    }
     
     if (data.status == "private") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong> has gone private!", "private", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone private (from " + prevStatus + ")!", "private", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPrivate();
         }
         subredditElement.classList.add("subreddit-private");
-        if (subredditElement.classList.contains("subreddit-restricted")) {
+        if (prevStatus == "restricted") {
             subredditElement.classList.remove("subreddit-restricted");
         } else {
             dark++;
         }
     } else if (data.status == "restricted") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted!", "restricted", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone restricted (from " + prevStatus + ")!", "restricted", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPrivate();
         }
         subredditElement.classList.add("subreddit-restricted");
-        if (subredditElement.classList.contains("subreddit-private")) {
+        if (prevStatus == "private") {
             subredditElement.classList.remove("subreddit-private");
         } else {
             dark++;
         }
     } else {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong> has gone public.", "public", function () {
+            newStatusUpdate("<strong>" + data.name + "</strong> has gone public (from " + prevStatus + ")", "public", function () {
                 doScroll(subredditElement);
             })
             audioSystem.playPublic();
