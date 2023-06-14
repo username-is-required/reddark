@@ -141,11 +141,16 @@ function updateSubreddit(data, _new = false) {
     
     if (data.status == "private") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>private</strong>!", "private", function () {
+            var statusUpdateText = "<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>private</strong>";
+            
+            if (prevStatus != "restricted") statusUpdateText += "!";
+            newStatusUpdate(statusUpdateText, "private", function () {
                 doScroll(subredditElement);
             })
+            
             audioSystem.playPrivate();
         }
+        
         subredditElement.classList.add("subreddit-private");
         if (prevStatus == "restricted") {
             subredditElement.classList.remove("subreddit-restricted");
@@ -154,11 +159,16 @@ function updateSubreddit(data, _new = false) {
         }
     } else if (data.status == "restricted") {
         if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            newStatusUpdate("<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>restricted</strong>!", "restricted", function () {
+            var statusUpdateText = "<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>restricted</strong>";
+            if (prevStatus != "public") statusUpdateText += "!";
+            
+            newStatusUpdate(statusUpdateText, "restricted", function () {
                 doScroll(subredditElement);
             })
+            
             audioSystem.playPrivate();
         }
+        
         subredditElement.classList.add("subreddit-restricted");
         if (prevStatus == "private") {
             subredditElement.classList.remove("subreddit-private");
@@ -170,8 +180,10 @@ function updateSubreddit(data, _new = false) {
             newStatusUpdate("<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>public</strong> :(", "public", function () {
                 doScroll(subredditElement);
             })
+            
             audioSystem.playPublic();
         }
+        
         subredditElement.classList.remove("subreddit-private");
         subredditElement.classList.remove("subreddit-restricted");
         dark--;
