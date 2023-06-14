@@ -169,8 +169,6 @@ server.listen(config.port, () => {
 // will call itself repeatedly until it has a **full valid response** for every sub
 // (this may or may not come back to haunt me)
 function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
-    const batchLoggingPrefix = "BATCH[start:" + subNameBatch[0] + "](" + subNameList.length + "): ";
-    
     return new Promise( resolve => { // not even giving it the parameter to reject lol
         // send a request
         const httpsReq = request.httpsGet("/api/info.json?sr_name=" + subNameBatch.join(",")).then(data => {
@@ -276,6 +274,8 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 throw new Error("no data for " + subNameBatch.length + " subs: [" + subNameBatch.join(", ") + "]");
             }
         }).catch(err => {
+            const batchLoggingPrefix = "BATCH[start:" + subNameBatch[0] + "](" + subNameList.length + "): ";
+            
             if (err.message == "timed out") {
                 console.log(batchLoggingPrefix + "Request to Reddit timed out (will retry in 5s)");
             } else {
