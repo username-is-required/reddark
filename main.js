@@ -186,24 +186,55 @@ server.listen(config.port, () => {
 function loadSubredditBatchStatus(subNameBatch) {
     const batchLoggingPrefix = "BATCH[start:" + subNameBatch[0] + "](" + subNameList.length + "): ";
     
-    return new Promise(async resolve => { // not even giving it the parameter to reject lol
+    return new Promise( resolve => { // not even giving it the parameter to reject lol
         // send a request
         const httpsReq = request.httpsGet("/api/info.json?sr_name=" + subNameBatch.join(",")).then(data => {
             // check valid json
             try {
                 data = JSON.parse(data);
             } catch (e) {
-                console.log("batch(" + subNameBatch.length + ") starting " + subNameBatch[0] + ": Request to Reddit errored (bad JSON)");
-                // try again after 5s
-                setTimeout(() => {
-                    const result = await loadSubredditBatchStatus(subnameBatch);
-                    resolve(result);
-                }, 5000);
+                //console.log(batchLoggingPrefix + "Request to Reddit errored (bad JSON) (will retry in 5s)");
+                throw new Error("bad JSON");
+            }
+            
+            if (typeof (data['message']) != "undefined" && data['error'] == 500) {
+                //console.log(batchLoggingPrefix + "Request to Reddit errored (500) (will retry in 5s) - " + data);
+                throw new Error("500 :: " + data);
+            }
+
+            const subResponses = data["data"]["children"];
+            
+            // loop through the sub responses
+            for (let subResponse of subResponses) {
+                // check it has a valid `subreddit_type` property
+                const subType = subResponse["data"]["subreddit_type"];
+
+                if (!["private", "restricted", "public"].includes(subType)) {
+                    throw new Error("sub type not one of the expected values");
+                }
+                
+                switch (subType) {
+                    case "private":
+                        
+                        break;
+                    case "restricted";
+                        
+                        break;
+                    case "public":
+                        
+                        break;
+                }
             }
         }).catch(err => {
+            if (err.message == "timed out") {
+                console.log(batchLoggingPrefix + "Request to Reddit timed out (will retry in 5s)");
+            } else {
+                console.log(batchLoggingPrefix + "Request to Reddit errored (will retry in 5s) - " + err);
+            }
+            
             // try again after 5s
-            setTimeout(() => {
-                const result = await loadSubredditBatchStatus(subnameBatch);
+            setTimeout(async () => {
+                const result = await loadSubredditBatchStatus(subNameBatch);
                 resolve(result);
             }, 5000);
         });
@@ -244,12 +275,7 @@ function updateStatus() {
                 }
                 const httpsReq = request.httpsGet("/" + subreddits[section][subreddit].name + ".json").then((data) => {
                     
-                    if (typeof (data['message']) != "undefined" && data['error'] == 500) {
-                        console.log(subreddits[section][subreddit].name + ": Request to Reddit errored (500) - " + data);
-                        requestErrorCount++;
-                        // error handling? the app will assume the sub is public
-                        return;
-                    }
+                    
                     
                     //console.log("successful response for " + subreddits[section][subreddit].name);
                     
