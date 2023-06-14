@@ -323,57 +323,6 @@ function updateStatus() {
                     // wait between requests
                     await wait(delayBetweenRequests);
                 }
-                const httpsReq = request.httpsGet("/" + subreddits[section][subreddit].name + ".json").then((data) => {
-                    
-                    
-                    
-                    //console.log("successful response for " + subreddits[section][subreddit].name);
-                    
-                    if (typeof (data['reason']) != "undefined" && data['reason'] == "private" && subreddits[section][subreddit].status != "
-                        
-                        if (firstCheck) console.log("private: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
-                        
-                        subreddits[section][subreddit].status = "private";
-                        if (firstCheck == false) {
-                            io.emit("update", subreddits[section][subreddit]);
-                        } else {
-                            io.emit("updatenew", subreddits[section][subreddit]);
-                        }
-                    } else if (data['data'] && data['data']['children'][0]['data']['subreddit_type'] == "restricted" && subreddits[section][subreddit].status != "restricted"){
-                        // the subreddit is restricted and the app doesn't know about it yet
-                        if (subreddits[section][subreddit].status != "private") privateCount++;
-                        
-                        if (firstCheck) console.log("restricted: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
-                        
-                        subreddits[section][subreddit].status = "restricted";
-                        if (firstCheck == false) {
-                            io.emit("update", subreddits[section][subreddit]);
-                        } else {
-                            io.emit("updatenew", subreddits[section][subreddit]);
-                        }
-                        
-                    } else if (
-                        (subreddits[section][subreddit].status == "private" && typeof (data['reason']) == "undefined")
-                        || (subreddits[section][subreddit].status == "restricted" && data['data'] && data['data']['children'][0]['data']['subreddit_type'] == "public")
-                    ) {
-                        // the subreddit is public but the app thinks it's private/restricted
-                        privateCount--;
-                        
-                        console.log("public: " + subreddits[section][subreddit].name + " (" + privateCount + ")");
-                        subreddits[section][subreddit].status = "public";
-                        io.emit("updatenew", subreddits[section][subreddit]);
-                    }
-                }).catch((err) => {
-                    requestErrorCount++;
-                    
-                    if (err.message == "timed out") {
-                        console.log(subreddits[section][subreddit].name + ": Request to Reddit timed out");
-                    } else {
-                        console.log(subreddits[section][subreddit].name + ": Request to Reddit errored - " + err);
-                    }
-                    
-                    // error handling? the app will assume the sub is public
-                })lllikkkk
             }
         }
 
