@@ -172,6 +172,7 @@ server.listen(config.port, () => {
 // (this may or may not come back to haunt me)
 function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
     const batchLoggingPrefix = "BATCH[start:" + subNameBatch[0] + "](" + subNameBatch.length + "): ";
+    const subNameBatchPreserved = subNameBatch;
     
     return new Promise( resolve => { // not even giving it the parameter to reject lol
         // send a request
@@ -288,7 +289,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
             
             // try again after 5s
             setTimeout(async () => {
-                const result = await loadSubredditBatchStatus(subNameBatch, sectionIndex);
+                const result = await loadSubredditBatchStatus(subNameBatchPreserved, sectionIndex);
                 resolve(result);
             }, 5000);
         });
