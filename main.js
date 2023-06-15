@@ -258,7 +258,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                             privateCount--;
                             // flag a status change
                             statusChanged = true;
-                        }l
+                        }
                         break;
                 }
 
