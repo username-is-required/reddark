@@ -4,7 +4,8 @@ const http = require('http');
 const { Server } = require("socket.io");
 
 var request = require("./requests.js");
-var config = require("./config.js")
+var config = require("./config.js");
+var filteredSubs = require("./filteredSubs.js");
 
 // helper function to wait for some time before continuing
 function wait(msDelay) {
