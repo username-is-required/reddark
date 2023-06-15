@@ -42,6 +42,9 @@ document.getElementById("enable_sounds").addEventListener("click", function () {
 var socket = io();
 
 // emit client info to socket once connected
+// (this isn't currently listened for, but keeping it here
+// in case we want to get the server to listen for it again
+// in the future)
 socket.on("connect", () => {
     socket.emit("client-info", {
         reloadable: true
@@ -109,16 +112,6 @@ function doScroll(el) {
     window.scrollTo(0, middle);
 }
 
-// not alerting for these subs as they've been spamming
-// back and forth between private and public
-const subsToFilter = [
-    /*"r/bi_irl",
-    "r/suddenlybi",
-    "r/ennnnnnnnnnnnbbbbbby",
-    "r/seriouslyfuckspez"*/
-    "r/gtafk"
-];
-
 function updateSubreddit(data, _new = false) {
     if (!loaded) return;
     
@@ -159,7 +152,7 @@ function updateSubreddit(data, _new = false) {
             dark++;
         }
     } else if (data.status == "restricted") {
-        if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
+        if (_new) {
             var statusUpdateText = "<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>restricted</strong>";
             if (prevStatus != "private") statusUpdateText += "!";
             
