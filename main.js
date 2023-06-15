@@ -273,10 +273,17 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                     subreddits[sectionIndex][subIndex]["status"] = subStatus;
                  
                     if (firstCheck) {
-                        io.emit("updatenew", subreddits[sectionIndex][subIndex]);
+                        // figure out if we should display an alert
+                        var displayAlert = true;
+                        // <add checking code here>
+                        
+                        io.emit("updatenew", {
+                            "subData": subreddits[sectionIndex][subIndex],
+                            "displayAlert": displayAlert
+                        });
                         console.log(knownSubStatus + "→" + subStatus + ": " + subName + " (" + privateCount + ")");
                     } else {
-                        io.emit("update", subreddits[sectionIndex][subIndex]);
+                        io.emit("update", {"subData": subreddits[sectionIndex][subIndex]});
                     }
                 }
             }
