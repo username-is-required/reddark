@@ -98,10 +98,10 @@ socket.on('disconnect', function () {
     loaded = false;
 });
 socket.on("updatenew", (data) => {
-    if (data.status == "private" || data.status == "restricted") {
-        console.log("NEW PRIVATE (o7): " + data.name);
+    if (data.subData.status == "private" || data.subData.status == "restricted") {
+        console.log("NEW PRIVATE (o7): " + data.subData.name);
     } else {
-        console.log(":/ new public: " + data.name);
+        console.log(":/ new public: " + data.subData.name);
     }
     updateSubreddit(data, true);
 })
@@ -114,12 +114,16 @@ function doScroll(el) {
 
 function updateSubreddit(data, _new = false) {
     if (!loaded) return;
+
+    const subData = data.subData;
+    const subName = subData.name;
+    const subStatus = subData.status;
     
-    var subredditElement = document.getElementById(data.name);
+    var subredditElement = document.getElementById(subName);
     if (subredditElement == null) {
         // if this happens, the subreddit list has probably been refreshed
         // but not yet emmitted
-        console.log("Skipped over " + data.name + " going " + data.status + ": not in list");
+        console.log("Skipped over " + subName + " going " + subStatus + ": not in list");
         return;
     }
 
@@ -132,10 +136,12 @@ function updateSubreddit(data, _new = false) {
     } else {
         prevStatus = "public";
     }
+
+    const displayAlert = data.displayAlert;
     
-    if (data.status == "private") {
-        if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
-            var statusUpdateText = "<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>private</strong>";
+    if (subStatus == "private") {
+        if (_new && displayAlert) {
+            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>private</strong>";
             if (prevStatus != "restricted") statusUpdateText += "!";
             
             newStatusUpdate(statusUpdateText, "private", function () {
@@ -151,9 +157,9 @@ function updateSubreddit(data, _new = false) {
         } else {
             dark++;
         }
-    } else if (data.status == "restricted") {
-        if (_new && data.displayAlert) {
-            var statusUpdateText = "<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>restricted</strong>";
+    } else if (subStatus == "restricted") {
+        if (_new && displayAlert) {
+            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>restricted</strong>";
             if (prevStatus != "private") statusUpdateText += "!";
             
             newStatusUpdate(statusUpdateText, "restricted", function () {
@@ -170,8 +176,8 @@ function updateSubreddit(data, _new = false) {
             dark++;
         }
     } else {
-        if (_new && data.displayAlert) {
-            newStatusUpdate("<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>public</strong> :(", "public", function () {
+        if (_new && displayAlert) {
+            newStatusUpdate("<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>public</strong> :(", "public", function () {
                 doScroll(subredditElement);
             })
             
@@ -184,7 +190,7 @@ function updateSubreddit(data, _new = false) {
     }
     
     updateStatusText();
-    subredditElement.querySelector("p").innerHTML = data.status;
+    subredditElement.querySelector("p").innerHTML = subStatus;
 }
 
 function genItem(name, status) {
@@ -195,6 +201,7 @@ function genItem(name, status) {
     _title.innerHTML = name;
     _status.innerHTML = status;
     _title.href = "https://old.reddit.com/" + name;
+    _title.target = "_blank";
     _item.id = name;
     if (status == "private") {
         _item.classList.add("subreddit-private");
