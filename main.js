@@ -16,7 +16,8 @@ function wait(msDelay) {
 // init a server
 const app = express();
 app.use(helmet.strictTransportSecurity({
-    "preload": true
+    "preload": true,
+    "maxAge": 31536000
 }));
 const server = http.createServer(app);
 
