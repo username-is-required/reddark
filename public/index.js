@@ -152,7 +152,7 @@ function updateSubreddit(data, _new = false) {
             dark++;
         }
     } else if (data.status == "restricted") {
-        if (_new) {
+        if (_new && data.displayAlert) {
             var statusUpdateText = "<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>restricted</strong>";
             if (prevStatus != "private") statusUpdateText += "!";
             
@@ -170,7 +170,7 @@ function updateSubreddit(data, _new = false) {
             dark++;
         }
     } else {
-        if (_new && !subsToFilter.includes(data.name.toLowerCase())) {
+        if (_new && data.displayAlert) {
             newStatusUpdate("<strong>" + data.name + "</strong><br>" + prevStatus + " → <strong>public</strong> :(", "public", function () {
                 doScroll(subredditElement);
             })
