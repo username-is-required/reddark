@@ -1,4 +1,4 @@
-# [Reddark (fork)](https://reddark-digitalocean-7lhfr.ondigitalocean.app)
+# [Reddark (fork)](https://reddark.io/)
 A website to watch subreddits go dark in realtime. Fork of the repository by [Tanza3D](https://github.com/Tanza3D).
 
 ## Subreddits
