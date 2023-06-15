@@ -183,7 +183,7 @@ server.listen(config.port, () => {
 var subStatusChangeCounts = {};
 
 // a function to init that variable above
-function initSubStatusChangeCounts() {
+function initSubStatusChangeCounts(resetToZero = false) {
     // make a copy -- counts currently in there will be brought over
     // (providing the releavnt sub is still present in the new list, of course)
     subStatusChangeCountsCopy = Object.assign({}, subStatusChangeCounts);
@@ -196,10 +196,14 @@ function initSubStatusChangeCounts() {
     for (let section of subreddits) {
         for (let sub of section) {
             // if no prev count we'll start them at zero
-            var prevCount = subStatusChangeCounts[sub.name];
+            var prevCount = 0;
+            
+            if (!resetToZero) {
+                prevCount = subStatusChangeCounts[sub.name];
 
-            if (prevCount === undefined) {
-                prevCount = 0;
+                if (prevCount === undefined) {
+                    prevCount = 0;
+                }
             }
             
             // add it in
@@ -464,6 +468,12 @@ async function run() {
         console.log("refreshSubredditList flag set to true");
         refreshSubredditList = true;
     }, config.listRefreshInterval);
+
+    // every hour, reset the subStatusChangeCounts
+    setInterval(() => {
+        console.log("Resetting alert autofilter counts"); // not the best wording i know
+        initSubStatusChangeCounts(true);
+    });
 }
 
 
