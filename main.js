@@ -313,14 +313,20 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                  
                     if (firstCheck) {
                         // figure out if we should display an alert
-                        var displayAlert = true;
+                        var displayAlert = subStatusChangeCounts[subName] <= 3; // a quick poll in the discord indicated the most popular choice was allowing 3 alerts in a given hour before the rest are filtered out
                         // <add checking code here>
                         
                         io.emit("updatenew", {
                             "subData": subreddits[sectionIndex][subIndex],
                             "displayAlert": displayAlert
                         });
-                        console.log(knownSubStatus + "→" + subStatus + ": " + subName + " (" + privateCount + ")");
+
+                        var logText = knownSubStatus + "→" + subStatus + ": " + subName + " (" + privateCount + ")";
+                        
+                        if (!displayAlert) logText += " (alert filtered)"; // mention in logs if alert filtered
+                        else subStatusChangeCounts[subname]++; // increment the count if the alert will be displayed
+                        
+                        console.log(logText);
                     } else {
                         io.emit("update", {"subData": subreddits[sectionIndex][subIndex]});
                     }
