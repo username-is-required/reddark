@@ -1,4 +1,5 @@
 const express = require('express');
+const helmet = require('helmet');
 const http = require('http');
 const { Server } = require("socket.io");
 
@@ -14,6 +15,9 @@ function wait(msDelay) {
 
 // init a server
 const app = express();
+app.use(helmet.strictTransportSecurity({
+    "preload": true
+}));
 const server = http.createServer(app);
 
 // init the websocket stuff
