@@ -116,6 +116,7 @@ const subsToFilter = [
     "r/suddenlybi",
     "r/ennnnnnnnnnnnbbbbbby",
     "r/seriouslyfuckspez"*/
+    "r/gtafk"
 ];
 
 function updateSubreddit(data, _new = false) {
