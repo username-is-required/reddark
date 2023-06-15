@@ -33,7 +33,7 @@ const io = new Server(server, {
 });
 
 // redirect to the new url if we're here from the digitalocean instance
-app.get('/reddark-digitalocean-7lhfr.ondigitalocean.app/', (req, res) => {
+app.get(/reddark-digitalocean-7lhfr.ondigitalocean.app/, (req, res) => {
     return res.redirect(301, "https://reddark.io/");
 });
 
