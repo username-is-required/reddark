@@ -346,8 +346,11 @@ function updateStatus() {
             // emit the reload signal if the config instructs
             // to reload clients following deployment
             if (config.reloadClientsFollowingDeployment) {
-                console.log("Client reload flag set, emitting reload signal");
-                io.emit("reload");
+                console.log("Client reload flag set, emitting reload signal in 20s");
+                setTimeout(() => {
+                    console.log("Emitting client reload signal");
+                    io.emit("reload");
+                }, 20000);
             }
             
             io.emit("subreddits", subreddits);
