@@ -258,7 +258,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                             privateCount--;
                             // flag a status change
                             statusChanged = true;
-                        }
+                        }l
                         break;
                 }
 
@@ -269,7 +269,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                  
                     if (firstCheck) {
                         io.emit("updatenew", subreddits[sectionIndex][subIndex]);
-                        console.log(subStatus + ": " + subName + " (" + privateCount + ")");
+                        console.log(knownSubStatus + "→" + subStatus + ": " + subName + " (" + privateCount + ")");
                     } else {
                         io.emit("update", subreddits[sectionIndex][subIndex]);
                     }
