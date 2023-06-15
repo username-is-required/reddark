@@ -32,6 +32,11 @@ const io = new Server(server, {
     allowEIO3: true
 });
 
+// redirect to the new url if we're here from the digitalocean instance
+app.get('/reddark-digitalocean-7lhfr.ondigitalocean.app/', (req, res) => {
+    return res.redirect(301, "https://reddark.io/");
+});
+
 // set up the static files - index.html and the public directory
 app.get('/', (req, res) => {
     res.sendFile(__dirname + '/index.html');
