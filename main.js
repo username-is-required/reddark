@@ -32,6 +32,15 @@ const io = new Server(server, {
     allowEIO3: true
 });
 
+// prove to google that i own the old domain name
+app.get('/googlea3bd7d46d213f4a1.html', (req, res, next) => {
+    if (!req.header("host").match(/\breddark-digitalocean-7lhfr\.ondigitalocean\.app\b/i)) {
+        res.sendFile(__dirname + '/googlea3bd7d46d213f4a1.html');
+    } else {
+        next();
+    }
+});
+
 // set up the static files - index.html and the public directory
 app.get('/', (req, res) => {
     // redirect to the new url if we're here from the digitalocean instance's url
