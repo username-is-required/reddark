@@ -34,7 +34,7 @@ const io = new Server(server, {
 
 // prove to google that i own the old domain name
 app.get('/googlea3bd7d46d213f4a1.html', (req, res, next) => {
-    if (!req.header("host").match(/\breddark-digitalocean-7lhfr\.ondigitalocean\.app\b/i)) {
+    if (req.header("host").match(/\breddark-digitalocean-7lhfr\.ondigitalocean\.app\b/i)) {
         res.sendFile(__dirname + '/googlea3bd7d46d213f4a1.html');
     } else {
         next();
