@@ -3,6 +3,7 @@ module.exports = {
     intervalBetweenRequests: 7,
     updateInterval: 10000,
     listRefreshInterval: 1800000,
-    url: "https://reddark-digitalocean-7lhfr.ondigitalocean.app/",
-    "reloadClientsFollowingDeployment": true
+    url: "https://reddark.io/",
+    "reloadClientsFollowingDeployment": true,
+    "allowedHourlyStatusChanges": 3 // a quick poll in the discord indicated the most popular choice was allowing 3 alerts in a given hour before the rest are filtered out
 }
