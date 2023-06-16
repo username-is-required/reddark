@@ -327,7 +327,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                         var logText = knownSubStatus + "→" + subStatus + ": " + subName + " (" + privateCount + ")";
                         
                         if (!displayAlert) logText += " (alert filtered)"; // mention in logs if alert filtered
-                        else subStatusChangeCounts[subname]++; // increment the count if the alert will be displayed
+                        else subStatusChangeCounts[subName]++; // increment the count if the alert will be displayed
                         
                         console.log(logText);
                     } else {
