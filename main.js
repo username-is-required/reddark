@@ -193,8 +193,8 @@ function initSubStatusChangeCounts(resetToZero = false) {
 
     // loop over the list of subs and add each one to the list.
     // if a sub had a count in the previous object, copy it over
-    for (let section of subreddits) {
-        for (let sub of section) {
+    for (let section in subreddits) {
+        for (let sub of subreddits[section]) {
             // if no prev count we'll start them at zero
             var prevCount = 0;
             
