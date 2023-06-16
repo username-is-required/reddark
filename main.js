@@ -479,7 +479,7 @@ async function run() {
     setInterval(() => {
         console.log("Resetting alert autofilter counts"); // not the best wording i know
         initSubStatusChangeCounts(true);
-    });
+    }, 3600000);
 }
 
 
