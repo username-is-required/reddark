@@ -98,11 +98,15 @@ socket.on('disconnect', function () {
     loaded = false;
 });
 socket.on("updatenew", (data) => {
+    var logstring = "";
     if (data.subData.status == "private" || data.subData.status == "restricted") {
-        console.log("NEW PRIVATE (o7): " + data.subData.name);
+        logstring += "NEW PRIVATE (o7): " + data.subData.name;
     } else {
-        console.log(":/ new public: " + data.subData.name);
+        logstring += ":/ new public: " + data.subData.name;
     }
+    if (!data.displayAlert) logstring += " (alert filtered)";
+    console.log(logstring);
+    
     updateSubreddit(data, true);
 })
 function doScroll(el) {
