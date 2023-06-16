@@ -198,7 +198,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
             
             if (typeof (data['message']) != "undefined" && data['error'] == 500) {
                 //console.log(batchLoggingPrefix + "Request to Reddit errored (500) (will retry in 5s) - " + data);
-                throw new Error("500 :: " + data);
+                throw new Error("500");
             }
 
             const subResponses = data["data"]["children"];
