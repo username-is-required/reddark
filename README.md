@@ -1,5 +1,5 @@
 # [Reddark (fork)](https://reddark.io/)
-A website to watch subreddits go dark in realtime. Fork of the repository by [Tanza3D](https://github.com/Tanza3D).
+A website to watch subreddits go dark in realtime. Fork of the [repository by Tanza3D](https://github.com/Tanza3D/reddark).
 
 ## Running
 To run this fork, the following enviromnent variables must be set:
@@ -19,6 +19,11 @@ If you have an idea for a feature you would like to see, please [submit an issue
 
 ## Bugs
 There are not any currently known bugs with this fork of Reddark. If you encounter an problem, please [submit an issue](https://github.com/username-is-required/reddark/issues/new?title=issue:%20[issue%20description%20here]) with the details, and it will be looked into.
+
+## Branch Structure
+There are two main branches that are used in this repository: `main` and `digital-ocean`. `main` is intended to be the 'front-page' of the repository (and the branch that can be easiest cloned to run locally), while `digital-ocean` is linked to the live version of the app and so contains some small differences that allow it to run on that platform.
+
+If submitting a pull request, please submit it with `main` as the base branch, rather than `digital-ocean`.
 
 ## Technologies
 This is using Express to host the frontend and Socket.io to serve data. Requests to Reddit are sent via the `/api/info.json` endpoint, which is used to get the statuses of 100 subreddits at a time.
