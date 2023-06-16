@@ -199,7 +199,7 @@ function initSubStatusChangeCounts(resetToZero = false) {
             var prevCount = 0;
             
             if (!resetToZero) {
-                prevCount = subStatusChangeCounts[sub.name];
+                prevCount = subStatusChangeCountsCopy[sub.name];
 
                 if (prevCount === undefined) {
                     prevCount = 0;
