@@ -332,7 +332,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                             "displayAlert": displayAlert
                         });
 
-                        var logText = knownSubStatus + "→" + subStatus + ": " + subName + " (" + privateCount + ")";
+                        var logText = subName + ": " + knownSubStatus + "→" + subStatus + " (" + privateCount + ")";
                         
                         if (!displayAlert) logText += " (alert filtered)"; // mention in logs if alert filtered
                         else subStatusChangeCounts[subName]++; // increment the count if the alert will be displayed
