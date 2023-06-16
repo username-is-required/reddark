@@ -313,7 +313,10 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                  
                     if (firstCheck) {
                         // figure out if we should display an alert
-                        var displayAlert = !filteredSubs.includes(subName.toLowerCase()) && subStatusChangeCounts[subName] <= 3; // a quick poll in the discord indicated the most popular choice was allowing 3 alerts in a given hour before the rest are filtered out
+                        var displayAlert = (
+                            !filteredSubs.includes(subName.toLowerCase())
+                            && subStatusChangeCounts[subName] <= config.allowedHourlyStatusChanges
+                        );
                         // <add checking code here>
                         
                         io.emit("updatenew", {
