@@ -317,7 +317,6 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                             !filteredSubs.includes(subName.toLowerCase())
                             && subStatusChangeCounts[subName] <= config.allowedHourlyStatusChanges
                         );
-                        // <add checking code here>
                         
                         io.emit("updatenew", {
                             "subData": subreddits[sectionIndex][subIndex],
