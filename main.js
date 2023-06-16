@@ -246,7 +246,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 const subIndexInBatch = subNameBatch.findIndex(el => {
                     return el.toLowerCase() == data["display_name"].toLowerCase();
                 });
-                const subName = data["display_name_prefixed"];
+                var subName = data["display_name_prefixed"];
 
                 if (subIndexInBatch == -1) {
                     // why the hell do we have a sub we didn't request
@@ -268,6 +268,10 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 const subIndex = subreddits[sectionIndex].findIndex(el => {
                     return el["name"].toLowerCase() == subName.toLowerCase();
                 });
+
+                // update the subname to the one we have
+                // (this helps to prevent problems caused by differencss in capitalisation)
+                subName = subreddits[sectionIndex][subIndex]["name"];
 
                 // get the sub's currently recorded status
                 const knownSubStatus = subreddits[sectionIndex][subIndex]["status"];
@@ -315,7 +319,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                         // figure out if we should display an alert
                         var displayAlert = (
                             !filteredSubs.includes(subName.toLowerCase())
-                            && subStatusChangeCounts[subreddits[sectionIndex][subIndex]["name"]] < config.allowedHourlyStatusChanges
+                            && subStatusChangeCounts[subName] < config.allowedHourlyStatusChanges
                         );
                         
                         io.emit("updatenew", {
