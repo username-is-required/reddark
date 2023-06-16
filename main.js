@@ -315,7 +315,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                         // figure out if we should display an alert
                         var displayAlert = (
                             !filteredSubs.includes(subName.toLowerCase())
-                            && subStatusChangeCounts[subName] <= config.allowedHourlyStatusChanges
+                            && subStatusChangeCounts[subName] < config.allowedHourlyStatusChanges
                         );
                         
                         io.emit("updatenew", {
