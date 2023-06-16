@@ -19,5 +19,10 @@ module.exports = {
     
     // whether or not to emit a signal to reload clients
     // after a new deployment
-    reloadClientsFollowingDeployment: (process.env.RELOAD_CLIENTS_FOLLOWING_DEPLOYMENT === "true")
+    reloadClientsFollowingDeployment: (process.env.RELOAD_CLIENTS_FOLLOWING_DEPLOYMENT === "true"),
+    
+    // the number of status changes a sub can make in a given hour before having
+    // the rest of its status changes for the rest of the hour auto-filtered from
+    // being alerted to the client
+    allowedHourlyStatusChanges: process.env.ALLOWED_HOURLY_STATUS_CHANGES
 }

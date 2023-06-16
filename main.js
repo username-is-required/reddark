@@ -4,7 +4,8 @@ const http = require('http');
 const { Server } = require("socket.io");
 
 var request = require("./requests.js");
-var config = require("./config.js")
+var config = require("./config.js");
+var filteredSubs = require("./filteredSubs.js");
 
 // helper function to wait for some time before continuing
 function wait(msDelay) {
@@ -138,6 +139,10 @@ async function createList(previousList = {}) {
             });
         }
     }
+    
+    // init the subStatusChangeCounts variable following the list creation
+    initSubStatusChangeCounts();
+    
     console.log(subreddits);
     return;
 }
@@ -157,8 +162,6 @@ var privateCount = 0;
 
 var countTimeout = null;
 var connectionsInLast5s = 0;
-
-//var reloadableClients = [];
 
 io.on('connection', (socket) => {
     if (firstCheck == false) {
@@ -187,6 +190,42 @@ server.listen(config.port, () => {
     console.log('listening on *:' + config.port);
 });
 
+// an object to keep track of how many status changes each sub has had
+// in a given hour
+// (this seems like a potentially memory intensive way to do autofiltering but i can't think of another)
+// (if you're reading this and you *can* think of another way, please let me know! github.com/username-is-required/reddark/issues/new
+var subStatusChangeCounts = {};
+
+// a function to init that variable above
+function initSubStatusChangeCounts(resetToZero = false) {
+    // make a copy -- counts currently in there will be brought over
+    // (providing the releavnt sub is still present in the new list, of course)
+    subStatusChangeCountsCopy = Object.assign({}, subStatusChangeCounts);
+    
+    // following our copy, wipe the current list
+    subStatusChangeCounts = {};
+
+    // loop over the list of subs and add each one to the list.
+    // if a sub had a count in the previous object, copy it over
+    for (let section in subreddits) {
+        for (let sub of subreddits[section]) {
+            // if no prev count we'll start them at zero
+            var prevCount = 0;
+            
+            if (!resetToZero) {
+                prevCount = subStatusChangeCountsCopy[sub.name];
+
+                if (prevCount === undefined) {
+                    prevCount = 0;
+                }
+            }
+            
+            // add it in
+            subStatusChangeCounts[sub.name] = prevCount;
+        }
+    }
+}
+
 // a helper function to 'load in' the statuses of a batch of subs
 // will call itself repeatedly until it has a **full valid response** for every sub
 // (this may or may not come back to haunt me)
@@ -207,7 +246,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
             
             if (typeof (data['message']) != "undefined" && data['error'] == 500) {
                 //console.log(batchLoggingPrefix + "Request to Reddit errored (500) (will retry in 5s) - " + data);
-                throw new Error("500 :: " + data);
+                throw new Error("500");
             }
 
             const subResponses = data["data"]["children"];
@@ -221,7 +260,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 const subIndexInBatch = subNameBatch.findIndex(el => {
                     return el.toLowerCase() == data["display_name"].toLowerCase();
                 });
-                const subName = data["display_name_prefixed"];
+                var subName = data["display_name_prefixed"];
 
                 if (subIndexInBatch == -1) {
                     // why the hell do we have a sub we didn't request
@@ -243,6 +282,10 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 const subIndex = subreddits[sectionIndex].findIndex(el => {
                     return el["name"].toLowerCase() == subName.toLowerCase();
                 });
+
+                // update the subname to the one we have
+                // (this helps to prevent problems caused by differencss in capitalisation)
+                subName = subreddits[sectionIndex][subIndex]["name"];
 
                 // get the sub's currently recorded status
                 const knownSubStatus = subreddits[sectionIndex][subIndex]["status"];
@@ -287,10 +330,25 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                     subreddits[sectionIndex][subIndex]["status"] = subStatus;
                  
                     if (firstCheck) {
-                        io.emit("updatenew", subreddits[sectionIndex][subIndex]);
-                        console.log(knownSubStatus + "→" + subStatus + ": " + subName + " (" + privateCount + ")");
+                        // figure out if we should display an alert
+                        var displayAlert = (
+                            !filteredSubs.includes(subName.toLowerCase())
+                            && subStatusChangeCounts[subName] < config.allowedHourlyStatusChanges
+                        );
+                        
+                        io.emit("updatenew", {
+                            "subData": subreddits[sectionIndex][subIndex],
+                            "displayAlert": displayAlert
+                        });
+
+                        var logText = knownSubStatus + "→" + subStatus + ": " + subName + " (" + privateCount + ")";
+                        
+                        if (!displayAlert) logText += " (alert filtered)"; // mention in logs if alert filtered
+                        else subStatusChangeCounts[subName]++; // increment the count if the alert will be displayed
+                        
+                        console.log(logText);
                     } else {
-                        io.emit("update", subreddits[sectionIndex][subIndex]);
+                        io.emit("update", {"subData": subreddits[sectionIndex][subIndex]});
                     }
                 }
             }
@@ -436,6 +494,12 @@ async function run() {
         console.log("refreshSubredditList flag set to true");
         refreshSubredditList = true;
     }, config.listRefreshInterval);
+
+    // every hour, reset the subStatusChangeCounts
+    setInterval(() => {
+        console.log("Resetting alert autofilter counts"); // not the best wording i know
+        initSubStatusChangeCounts(true);
+    }, 3600000);
 }
 
 
