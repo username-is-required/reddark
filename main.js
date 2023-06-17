@@ -47,24 +47,21 @@ app.use(express.static('public'))
 
 // a function to fetch data from a url and validate that it is JSON
 // it is persistent and will keep trying until it gets valid JSON
-function fetchValidJsonData(url) {
-    return new Promise(async resolve => {
-        var data = await request.httpsGet(url);
+async function fetchValidJsonData(url) {
+    var data = await request.httpsGet(url);
+    
+    try {
+        data = JSON.parse(data);
+    } catch (err) {
+        console.log("Request to Reddit errored (bad JSON) [will retry in 5s] - " + data);
         
-        try {
-            data = JSON.parse(data);
-            resolve(data);
-        } catch (err) {
-            console.log("Request to Reddit errored (bad JSON) [will retry] - " + data);
-            
-            // now we wait for 5 seconds and try it again!
-            // 'resolving' the promise with...uhh, recursion
-            setTimeout(async () => {
-              data = await fetchValidJsonData(url);
-              resolve(data);
-            }, 5000);
-        }
-    });
+        // now we wait for 5 seconds and try it again!
+        // 'resolving' the implied promise with...uhh, recursion
+        await wait(5000);
+        data = await fetchValidJsonData(url);
+    }
+
+    return data;
 }
 
 var subreddits_src = {
