@@ -218,184 +218,180 @@ function initSubStatusChangeCounts(resetToZero = false) {
 // a helper function to 'load in' the statuses of a batch of subs
 // will call itself repeatedly until it has a **full valid response** for every sub
 // (this may or may not come back to haunt me)
-function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
+async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
     const batchLoggingPrefix = "BATCH[start:" + subNameBatch[0] + "](" + subNameBatch.length + "): ";
     const subNameBatchPreserved = subNameBatch.slice();
     
-    return new Promise( resolve => { // not even giving it the parameter to reject lol
-        // set a check to see if the request has hung
-        // if the callback hasn't been reached after 10 minutes, for now, just kill the process
-        // (and drop a note in a github issue if configured to)
-        // if it's running on digitalocean it should restart automatically (i believe)
-        // hopefully this stops happening oncd i figure out why requests occasionally hang
-        const hungRequestTimeout = setTimeout(async () => {
-            // if requested, drop a comment to github informing of the hung request
-            if (config.commentInGithubIssueAfterRequestHangs) {
-                const octokit = new Octokit({auth: config.githubAccessToken});
-                await octokit.request("POST /repos/" + config.githubRepo + "/issues/" + config.githubIssue + "/comments", {
-                    body: "`" + new Date().toISOString() + "`\n**[ALERT]** Reddark: request hung for 10 minutes (exiting process)\n\n---\n\n<sup>this comment was made by a bot, beep boop</sup>",
-                    headers: {
-                        "X-GitHub-Api-Version": "2022-11-28"
-                    }
-                });
-            }
-
-            // console log because why not
-            console.log("request hung for 10min, exiting process");
-            
-            // kill the process
-            process.exit();
-        }, 600000);
-        
-        
-        // send a request
-        const httpsReq = request.httpsGet("/api/info.json?sr_name=" + subNameBatch.join(",")).then(data => {
-            // clear the hung request timeout
-            clearTimeout(hungRequestTimeout);
-            
-            
-            // check valid json
-            try {
-                data = JSON.parse(data);
-            } catch (e) {
-                //console.log(batchLoggingPrefix + "Request to Reddit errored (bad JSON) (will retry in 5s)");
-                throw new Error("bad JSON");
-            }
-            
-            if (typeof (data['message']) != "undefined" && data['error'] == 500) {
-                //console.log(batchLoggingPrefix + "Request to Reddit errored (500) (will retry in 5s) - " + data);
-                throw new Error("500");
-            }
-
-            const subResponses = data["data"]["children"];
-            
-            // loop through the sub responses
-            for (let subResponse of subResponses) {
-                // simplify things a bit
-                const data = subResponse["data"];
-                
-                // hello, what's your name, and is it one we were expecting
-                const subIndexInBatch = subNameBatch.findIndex(el => {
-                    return el.toLowerCase() == data["display_name"].toLowerCase();
-                });
-                var subName = data["display_name_prefixed"];
-
-                if (subIndexInBatch == -1) {
-                    // why the hell do we have a sub we didn't request
-                    throw new Error("unexpected sub [" + subName + "] in batch response");
+    // set a check to see if the request has hung
+    // if the callback hasn't been reached after 10 minutes, for now, just kill the process
+    // (and drop a note in a github issue if configured to)
+    // if it's running on digitalocean it should restart automatically (i believe)
+    // hopefully this stops happening oncd i figure out why requests occasionally hang
+    const hungRequestTimeout = setTimeout(async () => {
+        // if requested, drop a comment to github informing of the hung request
+        if (config.commentInGithubIssueAfterRequestHangs) {
+            const octokit = new Octokit({auth: config.githubAccessToken});
+            await octokit.request("POST /repos/" + config.githubRepo + "/issues/" + config.githubIssue + "/comments", {
+                body: "`" + new Date().toISOString() + "`\n**[ALERT]** Reddark: request hung for 10 minutes (exiting process)\n\n---\n\n<sup>this comment was made by a bot, beep boop</sup>",
+                headers: {
+                "X-GitHub-Api-Version": "2022-11-28"
                 }
-
-                // remove the sub name from the batch array
-                // as a way of keeping track of which subs we've received data for
-                subNameBatch.splice(subIndexInBatch, 1);
-                
-                // check it has a valid `subreddit_type` property
-                const subStatus = subResponse["data"]["subreddit_type"];
-
-                if (!["private", "restricted", "public"].includes(subStatus)) {
-                    throw new Error("status for [" + subName + "] not one of the expected values");
-                }
-                
-                // find this sub's index in the section array
-                const subIndex = subreddits[sectionIndex].findIndex(el => {
-                    return el["name"].toLowerCase() == subName.toLowerCase();
-                });
-
-                // update the subname to the one we have
-                // (this helps to prevent problems caused by differencss in capitalisation)
-                subName = subreddits[sectionIndex][subIndex]["name"];
-
-                // get the sub's currently recorded status
-                const knownSubStatus = subreddits[sectionIndex][subIndex]["status"];
-                var statusChanged = false;
-
-                // sub status logic
-                switch (subStatus) {
-                    case "private":
-                        switch (knownSubStatus) {
-                            case "public":
-                                // sub now private, app thinks it's something elss
-                                privateCount++; // deliberately no break after this line
-                            case "restricted":
-                                // flag a status change
-                                statusChanged = true;
-                                break;
-                        }
-                        break;
-                    case "restricted":
-                        switch (knownSubStatus) {
-                            case "public":
-                                // sub now restricted, app thinks it's something elss
-                                privateCount++; // deliberately no break after this line
-                            case "private":
-                                // flag a status change
-                                statusChanged = true;
-                                break;
-                        }
-                        break;
-                    case "public":
-                        if (["private", "restricted"].includes(knownSubStatus)) {
-                            privateCount--;
+            });
+        }
+        
+        // console log because why not
+        console.log("request hung for 10min, exiting process");
+        
+        // kill the process
+        process.exit();
+    }, 600000);
+    
+    
+    // send a request
+    try {
+        const data = await request.httpsGet("/api/info.json?sr_name=" + subNameBatch.join(","));
+        // clear the hung request timeout
+        clearTimeout(hungRequestTimeout);
+        
+        // check valid json
+        // (side note: if i feel like it at some point i might want to move to only having one trycatch block and get rid of nested ones like this)
+        try {
+            data = JSON.parse(data);
+        } catch (e) {
+            throw new Error("bad JSON");
+        }
+        
+        if (typeof (data['message']) != "undefined" && data['error'] == 500) {
+            throw new Error("500");
+        }
+        
+        const subResponses = data["data"]["children"];
+        
+        // loop through the sub responses
+        for (let subResponse of subResponses) {
+            // simplify things a bit
+            const data = subResponse["data"];
+            
+            // hello, what's your name, and is it one we were expecting
+            const subIndexInBatch = subNameBatch.findIndex(el => {
+                return el.toLowerCase() == data["display_name"].toLowerCase();
+            });
+            var subName = data["display_name_prefixed"];
+            
+            if (subIndexInBatch == -1) {
+                // why the hell do we have a sub we didn't request
+                throw new Error("unexpected sub [" + subName + "] in batch response");
+            }
+            
+            // remove the sub name from the batch array
+            // as a way of keeping track of which subs we've received data for
+            subNameBatch.splice(subIndexInBatch, 1);
+            
+            // check it has a valid `subreddit_type` property
+            const subStatus = subResponse["data"]["subreddit_type"];
+            
+            if (!["private", "restricted", "public"].includes(subStatus)) {
+                throw new Error("status for [" + subName + "] not one of the expected values");
+            }
+            
+            // find this sub's index in the section array
+            const subIndex = subreddits[sectionIndex].findIndex(el => {
+                return el["name"].toLowerCase() == subName.toLowerCase();
+            });
+            
+            // update the subname to the one we have
+            // (this helps to prevent problems caused by differencss in capitalisation)
+            subName = subreddits[sectionIndex][subIndex]["name"];
+            
+            // get the sub's currently recorded status
+            const knownSubStatus = subreddits[sectionIndex][subIndex]["status"];
+            var statusChanged = false;
+            
+            // sub status logic
+            switch (subStatus) {
+                case "private":
+                    switch (knownSubStatus) {
+                        case "public":
+                            // sub now private, app thinks it's something elss
+                            privateCount++; // deliberately no break after this line
+                        case "restricted":
                             // flag a status change
                             statusChanged = true;
-                        }
-                        break;
-                }
-
-                // if the sub's changed status, emit & log as such
-                if (statusChanged) {
-                    // update the status in our list
-                    subreddits[sectionIndex][subIndex]["status"] = subStatus;
-                 
-                    if (firstCheck) {
-                        // figure out if we should display an alert
-                        var displayAlert = (
-                            !filteredSubs.includes(subName.toLowerCase())
-                            && subStatusChangeCounts[subName] < config.allowedHourlyStatusChanges
-                        );
-                        
-                        io.emit("updatenew", {
-                            "subData": subreddits[sectionIndex][subIndex],
-                            "displayAlert": displayAlert
-                        });
-
-                        var logText = subName + ": " + knownSubStatus + "→" + subStatus + " (" + privateCount + ")";
-                        
-                        if (!displayAlert) logText += " (alert filtered)"; // mention in logs if alert filtered
-                        else subStatusChangeCounts[subName]++; // increment the count if the alert will be displayed
-                        
-                        console.log(logText);
-                    } else {
-                        io.emit("update", {"subData": subreddits[sectionIndex][subIndex]});
+                            break;
                     }
+                    break;
+                case "restricted":
+                    switch (knownSubStatus) {
+                        case "public":
+                            // sub now restricted, app thinks it's something elss
+                            privateCount++; // deliberately no break after this line
+                        case "private":
+                            // flag a status change
+                            statusChanged = true;
+                            break;
+                    }
+                    break;
+                case "public":
+                    if (["private", "restricted"].includes(knownSubStatus)) {
+                        privateCount--;
+                        // flag a status change
+                        statusChanged = true;
+                    }
+                    break;
+            }
+            
+            // if the sub's changed status, emit & log as such
+            if (statusChanged) {
+                // update the status in our list
+                subreddits[sectionIndex][subIndex]["status"] = subStatus;
+                
+                if (firstCheck) {
+                    // figure out if we should display an alert
+                    var displayAlert = (
+                        !filteredSubs.includes(subName.toLowerCase())
+                        && subStatusChangeCounts[subName] < config.allowedHourlyStatusChanges
+                    );
+                    
+                    io.emit("updatenew", {
+                        "subData": subreddits[sectionIndex][subIndex],
+                        "displayAlert": displayAlert
+                    });
+                    
+                    var logText = subName + ": " + knownSubStatus + "→" + subStatus + " (" + privateCount + ")";
+                    
+                    if (!displayAlert) logText += " (alert filtered)"; // mention in logs if alert filtered
+                    else subStatusChangeCounts[subName]++; // increment the count if the alert will be displayed
+                    
+                    console.log(logText);
+                } else {
+                    io.emit("update", {"subData": subreddits[sectionIndex][subIndex]});
                 }
             }
-            
-            // if there are any subs left in the batch array, we didn't get data for them
-            // and that's a problem
-            if (subNameBatch.length > 0) {
-                throw new Error("no data for " + subNameBatch.length + " subs: [" + subNameBatch.join(", ") + "]");
-            }
-
-            // if we get here, this batch should be sucessfully completed!
-            resolve();
-        }).catch(err => {
-            // clear the hung request timeout
-            clearTimeout(hungRequestTimeout);
-            
-            if (err.message == "timed out") {
-                console.log(batchLoggingPrefix + "Request to Reddit timed out (will retry in 5s)");
-            } else {
-                console.log(batchLoggingPrefix + "Request to Reddit errored (will retry in 5s) - " + err);
-            }
-            
-            // try again after 5s
-            setTimeout(async () => {
-                const result = await loadSubredditBatchStatus(subNameBatchPreserved, sectionIndex);
-                resolve(result);
-            }, 5000);
-        })
-    });
+        }
+        
+        // if there are any subs left in the batch array, we didn't get data for them
+        // and that's a problem
+        if (subNameBatch.length > 0) {
+            throw new Error("no data for " + subNameBatch.length + " subs: [" + subNameBatch.join(", ") + "]");
+        }
+        
+        // if we get here, this batch should be sucessfully completed!
+        resolve();
+    } catch (err) {
+        // clear the hung request timeout
+        clearTimeout(hungRequestTimeout);
+        
+        if (err.message == "timed out") {
+            console.log(batchLoggingPrefix + "Request to Reddit timed out (will retry in 5s)");
+        } else {
+            console.log(batchLoggingPrefix + "Request to Reddit errored (will retry in 5s) - " + err);
+        }
+        
+        // try again after 5s
+        wait(5000);
+        const result = await loadSubredditBatchStatus(subNameBatchPreserved, sectionIndex);
+        resolve(result);
+    }
 }
 
 var checkCounter = 0;
