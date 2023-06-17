@@ -30,11 +30,13 @@ module.exports = {
 
             request.on('error', (err) => {
                 reject(err)
-            })
+            });
             request.on('timeout', () => {
                 request.destroy()
                 reject(new Error('timed out'))
-            })
+            });
+
+            request.end();
         })
     }
 }
