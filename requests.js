@@ -1,18 +1,27 @@
-// https://github.com/Osekai/osekai-imagepier/blob/main/request.js
-const https = require('https');
+// this file originally based on https://github.com/Osekai/osekai-imagepier/blob/main/request.js
+// since rewritten to use axios
+
+const axios = require('axios');
+
 module.exports = {
     httpsGet: function (url) {
+        return new Promise(async (resolve, reject) => {
+            try {
+                const resp = await axios.get(url, {
+                    baseURL: "https://www.reddit.com",
+                    headers: {
+                        // "Range": "bytes=0-50",
+                        "User-Agent": "Reddark (https://github.com/username-is-required/Reddark)"
+                    },
+                    timeout: 30000 // 30s timeout
+                });
+            } catch (err) {
+                reject(err);
+            }
+        });
+        
         return new Promise((resolve, reject) => {
-            const options = {
-                hostname: 'www.reddit.com',
-                path: url,
-                method: 'GET',
-                timeout: 300000,
-                headers: {
-                    "User-Agent": "Reddark (https://github.com/username-is-required/Reddark)",
-                    'Range': "bytes=0-50"
-                }
-            };
+            
 
 
             const request = https.get(options, (res) => {
