@@ -21,6 +21,7 @@
   },
   "license": "AGPL-3.0-only",
   "dependencies": {
+    "@octokit/core": "^4.2.4",
     "express": "4.18.2",
     "helmet": "^7.0.0",
     "socket.io": "4.6.2"
