@@ -15,13 +15,6 @@ function wait(msDelay) {
     });
 }
 
-// init an octokit issue if we're commenting in an issue
-// after hung requests
-if (config.commentInGithubIssueAfterRequestHangs) {
-    const octokit = new Octokit({auth: config.githubAccessToken});
-    console.log("Initialised Octokit instance");
-}
-
 // init a server
 const app = express();
 app.use(helmet.strictTransportSecurity({
@@ -241,6 +234,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
         const hungRequestTimeout = setTimeout(async () => {
             // if requested, drop a comment to github informing of the hung request
             if (config.commentInGithubIssueAfterRequestHangs) {
+                const octokit = new Octokit({auth: config.githubAccessToken});
                 await octokit.request("POST /repos/" + config.githubRepo + "/issues/" + config.githubIssue + "/comments", {
                     body: "`" + new Date().toISOString() + "`\n**[ALERT]** Reddark: request hung for 10 minutes (exiting process)\n\n---\n\n<sup>this comment was made by a bot, beep boop</sup>",
                     headers: {
