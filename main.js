@@ -256,6 +256,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
             // clear the hung request timeout
             clearTimeout(hungRequestTimeout);
             
+            
             // check valid json
             try {
                 data = JSON.parse(data);
@@ -382,6 +383,9 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
             // if we get here, this batch should be sucessfully completed!
             resolve();
         }).catch(err => {
+            // clear the hung request timeout
+            clearTimeout(hungRequestTimeout);
+            
             if (err.message == "timed out") {
                 console.log(batchLoggingPrefix + "Request to Reddit timed out (will retry in 5s)");
             } else {
@@ -393,7 +397,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 const result = await loadSubredditBatchStatus(subNameBatchPreserved, sectionIndex);
                 resolve(result);
             }, 5000);
-        });
+        })
     });
 }
 
