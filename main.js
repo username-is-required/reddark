@@ -242,9 +242,15 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
             // if requested, drop a comment to github informing of the hung request
             if (config.commentInGithubIssueAfterRequestHangs) {
                 await octokit.request("POST /repos/" + config.githubRepo + "/issues/" + config.githubIssue + "/comments", {
-                    body: "`" + new Date().toISOString() + "`\n**[ALERT]** Reddark: request hung (exiting process)\n\n---\n\n<sup>this comment was made by a bot, beep boop</sup>"
+                    body: "`" + new Date().toISOString() + "`\n**[ALERT]** Reddark: request hung for 10 minutes (exiting process)\n\n---\n\n<sup>this comment was made by a bot, beep boop</sup>",
+                    headers: {
+                        "X-GitHub-Api-Version": "2022-11-28"
+                    }
                 });
             }
+
+            // console log because why not
+            console.log("request hung for 10min, exiting process");
             
             // kill the process
             process.exit();
