@@ -376,7 +376,6 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
         }
         
         // if we get here, this batch should be sucessfully completed!
-        resolve();
     } catch (err) {
         // clear the hung request timeout
         clearTimeout(hungRequestTimeout);
@@ -390,80 +389,77 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
         // try again after 5s
         wait(5000);
         const result = await loadSubredditBatchStatus(subNameBatchPreserved, sectionIndex);
-        resolve(result);
+        return result;
     }
 }
 
 var checkCounter = 0;
 
-function updateStatus() {
-    return new Promise(async (resolve, reject) => {
-        // the delay (in ms) between sending off requests to reddit
-        // aka the anti-rate-limiter
-        // (probably also the anti-server-crasher tbf)
-        var delayBetweenRequests = config.intervalBetweenRequests;
+async function updateStatus() {
+    // the delay (in ms) between sending off requests to reddit
+    // aka the anti-rate-limiter
+    // (probably also the anti-server-crasher tbf)
+    var delayBetweenRequests = config.intervalBetweenRequests;
+    
+    var batchLoadRequests = [];
+    checkCounter++;
+    console.log("** Starting check " + checkCounter + " **");
+    for (let section in subreddits) {
+        // batch subreddits together so we can  request data on them in a single api call
+        var subredditBatch = [];
         
-        var batchLoadRequests = [];
-        checkCounter++;
-        console.log("** Starting check " + checkCounter + " **");
-        for (let section in subreddits) {
-            // batch subreddits together so we can  request data on them in a single api call
-            var subredditBatch = [];
+        for (let subIndex in subreddits[section]) {
+            subredditBatch.push(subreddits[section][subIndex].name.substring(2));
             
-            for (let subIndex in subreddits[section]) {
-                subredditBatch.push(subreddits[section][subIndex].name.substring(2));
+            // if the batch is full, or the section is complete
+            if (subredditBatch.length == 100 || subIndex == subreddits[section].length - 1) {
+                // gets the batch loading (the async function returns an implied promise i believe)
+                const batchLoadPromise = loadSubredditBatchStatus(subredditBatch, section);
                 
-                // if the batch is full, or the section is complete
-                if (subredditBatch.length == 100 || subIndex == subreddits[section].length - 1) {
-                    // gets the batch loading
-                    const batchLoadPromise = loadSubredditBatchStatus(subredditBatch, section);
-
-                    // empty the current batch
-                    subredditBatch = [];
-
-                    batchLoadRequests.push(batchLoadPromise);
+                // empty the current batch
+                subredditBatch = [];
                 
-                    // wait between requests
-                    await wait(delayBetweenRequests);
-                }
+                batchLoadRequests.push(batchLoadPromise);
+                
+                // wait between requests
+                await wait(delayBetweenRequests);
             }
         }
-
-        // wait for them all to complete
-        await Promise.all(batchLoadRequests);
-        
-        console.log("All batched requests for check " + checkCounter + " complete");
-        console.log(config.updateInterval + "ms until next check");
-        
-        // all requests have now either been completed or errored
-        if (!firstCheck) {
-            // emit the reload signal if the config instructs
-            // to reload clients following deployment
-            if (config.reloadClientsFollowingDeployment) {
-                console.log("Client reload flag set, emitting reload signal in 20s");
-                setTimeout(() => {
-                    console.log("Emitting client reload signal");
-                    io.emit("reload");
-                }, 20000);
-            }
-            
-            io.emit("subreddits", subreddits);
-            firstCheck = true;
+    }
+    
+    // wait for them all to complete
+    await Promise.all(batchLoadRequests);
+    
+    console.log("All batched requests for check " + checkCounter + " complete");
+    console.log(config.updateInterval + "ms until next check");
+    
+    // all requests have now either been completed or errored
+    if (!firstCheck) {
+        // emit the reload signal if the config instructs
+        // to reload clients following deployment
+        if (config.reloadClientsFollowingDeployment) {
+            console.log("Client reload flag set, emitting reload signal in 20s");
+            setTimeout(() => {
+                console.log("Emitting client reload signal");
+                io.emit("reload");
+            }, 20000);
         }
         
-        // this statement will trigger if this is the first call to updateStatus
-        // since the subreddit list refreshed
-        if (currentlyRefreshing) {
-            io.emit("subreddits-refreshed", subreddits);
-            console.log("Emitted the refreshed list of subreddits");
-            
-            // reset the flag
-            currentlyRefreshing = false;
-        }
+        io.emit("subreddits", subreddits);
+        firstCheck = true;
+    }
+    
+    // this statement will trigger if this is the first call to updateStatus
+    // since the subreddit list refreshed
+    if (currentlyRefreshing) {
+        io.emit("subreddits-refreshed", subreddits);
+        console.log("Emitted the refreshed list of subreddits");
         
-        // the updating is now complete, resolve the promise
-        resolve();
-    });
+        // reset the flag
+        currentlyRefreshing = false
+    }
+    
+    // the updating is now complete
 }
 
 // this function calls updateStatus to check/update the status of
