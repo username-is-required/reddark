@@ -5,5 +5,6 @@ module.exports = {
     listRefreshInterval: 1800000,
     url: "https://reddark.io/",
     "reloadClientsFollowingDeployment": true,
-    "allowedHourlyStatusChanges": 3 // a quick poll in the discord indicated the most popular choice was allowing 3 alerts in a given hour before the rest are filtered out
+    "allowedHourlyStatusChanges": 3 // a quick poll in the discord indicated the most popular choice was allowing 3 alerts in a given hour before the rest are filtered out,
+    "commentInGithubIssueAfterRequestHangs": false,
 }
