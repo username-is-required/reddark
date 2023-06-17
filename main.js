@@ -2,6 +2,7 @@ const express = require('express');
 const helmet = require('helmet');
 const http = require('http');
 const { Server } = require("socket.io");
+const { Octokit } = require("@octokit/core");
 
 var request = require("./requests.js");
 var config = require("./config.js");
@@ -12,6 +13,13 @@ function wait(msDelay) {
     return new Promise((resolve) => {
         setTimeout(resolve, msDelay);
     });
+}
+
+// init an octokit issue if we're commenting in an issue
+// after hung requests
+if (config.commentInGithubIssueAfterRequestHangs) {
+    const octokit = new Octokit({auth: config.githubAccessToken});
+    console.log("Initialised Octokit instance");
 }
 
 // init a server
@@ -225,8 +233,29 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
     const subNameBatchPreserved = subNameBatch.slice();
     
     return new Promise( resolve => { // not even giving it the parameter to reject lol
+        // set a check to see if the request has hung
+        // if the callback hasn't been reached after 10 minutes, for now, just kill the process
+        // (and drop a note in a github issue if configured to)
+        // if it's running on digitalocean it should restart automatically (i believe)
+        // hopefully this stops happening oncd i figure out why requests occasionally hang
+        const hungRequestTimeout = setTimeout(async () => {
+            // if requested, drop a comment to github informing of the hung request
+            if (config.commentInGithubIssueAfterRequestHangs) {
+                await octokit.request("POST /repos/" + config.githubRepo + "/issues/" + config.githubIssue + "/comments", {
+                    body: "`" + new Date().toISOString() + "`\n**[ALERT]** Reddark: request hung (exiting process)\n\n---\n\n<sup>this comment was made by a bot, beep boop</sup>"
+                });
+            }
+            
+            // kill the process
+            process.exit();
+        }, 600000);
+        
+        
         // send a request
         const httpsReq = request.httpsGet("/api/info.json?sr_name=" + subNameBatch.join(",")).then(data => {
+            // clear the hung request timeout
+            clearTimeout(hungRequestTimeout);
+            
             // check valid json
             try {
                 data = JSON.parse(data);
