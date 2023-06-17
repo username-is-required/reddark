@@ -103,10 +103,9 @@ async function createList(previousList = {}) {
     await appendList("/r/ModCoord/wiki/index.json")
     
     console.log("grabbed subreddits");
-    //subreddits_src["30+ million:"].push("r/tanzatest")
 
     for (var section in subreddits_src) {
-        console.log(section);
+        //console.log(section);
         subreddits[section] = [];
         for (var subreddit in subreddits_src[section]) {
             var subName = subreddits_src[section][subreddit];
