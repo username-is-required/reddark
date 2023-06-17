@@ -60,7 +60,8 @@ async function fetchValidJsonData(url) {
         await wait(5000);
         data = await fetchValidJsonData(url);
     }
-
+    
+    // return the result
     return data;
 }
 
@@ -75,11 +76,11 @@ async function appendList(url) {
     var section = [];
     var sectionname = "";
     
-    data = await fetchValidJsonData(url);
+    var data = await fetchValidJsonData(url);
     
     text = data['data']['content_md'];
-    //console.log(text);
     lines = text.split("\n");
+    
     for (var line of lines) {
         if (line.startsWith("##") && !line.includes("Please") && !line.includes("Combined") && !line.includes("Unique") && line.includes(":")) {
             if (section != []) subreddits_src[sectionname] = section;
