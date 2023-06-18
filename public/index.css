@@ -166,12 +166,17 @@ a {
     color: var(--text-muted)
 }
 
-.subreddit-private {
-    color: #00ffaa !important;
-    text-shadow: 0px 0px 20px #00ffaa !important;
+.subreddit-private,
+.subreddit-restricted,
+.subreddit-john-oliver {
     margin-bottom: 15px;
     font-weight: 900;
     position: relative;
+}
+
+.subreddit-private {
+    color: #00ffaa !important;
+    text-shadow: 0px 0px 20px #00ffaa !important;
 }
 
 .subreddit-private p,
@@ -183,15 +188,23 @@ a {
 .subreddit-restricted {
     color: #ffc42e !important;
     text-shadow: 0px 0px 20px #ffc42e !important;
-    margin-bottom: 15px;
-    font-weight: 900;
-    position: relative;
 }
 
 .subreddit-restricted p,
 .subreddit-restricted a {
     word-wrap: anywhere;
     color: #ffc42e !important;
+}
+
+.subreddit-john-oliver {
+    color: #40a4ff !important;
+    text-shadow: 0px 0px 20px #40a4ff;
+}
+
+.subreddit-john-oliver p,
+.subreddit-john-oliver a {
+    word-wrap: anywhere;
+    color: #40a4ff !important;
 }
 
 
@@ -238,6 +251,10 @@ a {
 
 .status-update-public {
     --col: #88959f !important;
+}
+
+.status-update-john-oliver {
+    --col: #40a4ff !important;
 }
 
 .button {
