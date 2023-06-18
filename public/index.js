@@ -121,7 +121,7 @@ function updateSubreddit(data, _new = false) {
 
     const subData = data.subData;
     const subName = subData.name;
-    const subStatus = subData.status;
+    const subStatus = subData.status; // public, private, restricted, john-oliver
     
     var subredditElement = document.getElementById(subName);
     if (subredditElement == null) {
@@ -137,64 +137,59 @@ function updateSubreddit(data, _new = false) {
         prevStatus = "private";
     } else if (subredditElement.classList.contains("subreddit-restricted")) {
         prevStatus = "restricted";
+    } else if (subredditElement.classList.contains("subreddit-john-oliver")) {
+        prevStatus = "john-oliver";
     } else {
         prevStatus = "public";
     }
 
     const displayAlert = data.displayAlert;
     
+    subredditElement.classList.add("subreddit-" + subStatus);
+    subredditElement.classList.remove("subreddit-" + prevStatus);
+    
     if (subStatus == "private") {
         if (_new && displayAlert) {
             var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>private</strong>";
             if (prevStatus != "restricted") statusUpdateText += "!";
-            
-            newStatusUpdate(statusUpdateText, "private", function () {
-                doScroll(subredditElement);
-            })
+            newStatusUpdate(statusUpdateText, "private", () => doScroll(subredditElement));
             
             audioSystem.playPrivate();
         }
         
-        subredditElement.classList.add("subreddit-private");
-        if (prevStatus == "restricted") {
-            subredditElement.classList.remove("subreddit-restricted");
-        } else {
-            dark++;
-        }
+        if (prevStatus != "restricted") dark++;
     } else if (subStatus == "restricted") {
         if (_new && displayAlert) {
             var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>restricted</strong>";
             if (prevStatus != "private") statusUpdateText += "!";
-            
-            newStatusUpdate(statusUpdateText, "restricted", function () {
-                doScroll(subredditElement);
-            })
+            newStatusUpdate(statusUpdateText, "restricted", () => doScroll(subredditElement));
             
             audioSystem.playPrivate();
         }
         
-        subredditElement.classList.add("subreddit-restricted");
-        if (prevStatus == "private") {
-            subredditElement.classList.remove("subreddit-private");
-        } else {
-            dark++;
+        if (prevStatus != "private") dark++;
+    } else if (subStatus == "john-oliver") {
+        if (_new && displayAlert) {
+            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>john oliver</strong>!";
+            newStatusUpdate(statusUpdateText, "john-oliver", () => doScroll(subredditElement));
+
+            audioSystem.playPrivate();
         }
+
+        if (prevStatus != "public") dark--;
     } else {
         if (_new && displayAlert) {
-            newStatusUpdate("<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>public</strong> :(", "public", function () {
-                doScroll(subredditElement);
-            })
+            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>public</strong> :(";
+            newStatusUpdate(statusUpdateText, "public", () => doScroll(subredditElement));
             
             audioSystem.playPublic();
         }
         
-        subredditElement.classList.remove("subreddit-private");
-        subredditElement.classList.remove("subreddit-restricted");
-        dark--;
+        if (prevStatus != "john-oliver") dark--;
     }
     
     updateStatusText();
-    subredditElement.querySelector("p").innerHTML = subStatus;
+    subredditElement.querySelector("p").innerHTML = subStatus.replaceAll("-", " ");
 }
 
 function genItem(name, status) {
@@ -207,10 +202,8 @@ function genItem(name, status) {
     _title.href = "https://old.reddit.com/" + name;
     _title.target = "_blank";
     _item.id = name;
-    if (status == "private") {
-        _item.classList.add("subreddit-private");
-    } else if (status == "restricted") {
-        _item.classList.add("subreddit-restricted");
+    if (status != "public") {
+        _item.classList.add("subreddit-" + status);
     }
     _item.appendChild(_title);
     _item.appendChild(_status);
@@ -248,17 +241,7 @@ function updateStatusText() {
 }
 function newStatusUpdate(text, status, callback = null) {
     var item = Object.assign(document.createElement("div"), { "className": "status-update" });
-    switch (status) {
-        case "private":
-            item.classList.add("status-update-private");
-            break;
-        case "restricted":
-            item.classList.add("status-update-restricted");
-            break;
-        case "public":
-            item.classList.add("status-update-public");
-            break;
-    }
+    item.classList.add("status-update-" + status);
     item.innerHTML = text;
     document.getElementById("statusupdates").appendChild(item);
     setTimeout(() => {
