@@ -198,7 +198,7 @@ function genItem(name, status) {
     var _title = document.createElement("a");
     _item.className = "subreddit";
     _title.innerHTML = name;
-    _status.innerHTML = status;
+    _status.innerHTML = status.replaceAll("-", " ");
     _title.href = "https://old.reddit.com/" + name;
     _title.target = "_blank";
     _item.id = name;
