@@ -121,7 +121,7 @@ function updateSubreddit(data, _new = false) {
 
     const subData = data.subData;
     const subName = subData.name;
-    const subStatus = subData.status; // public, private, restricted, john-oliver
+    let subStatus = subData.status; // public, private, restricted, john-oliver
     
     var subredditElement = document.getElementById(subName);
     if (subredditElement == null) {
@@ -130,8 +130,6 @@ function updateSubreddit(data, _new = false) {
         console.log("Skipped over " + subName + " going " + subStatus + ": not in list");
         return;
     }
-
-    var prevStatus = "";
 
     if (subredditElement.classList.contains("subreddit-private")) {
         prevStatus = "private";
@@ -147,6 +145,8 @@ function updateSubreddit(data, _new = false) {
     
     subredditElement.classList.add("subreddit-" + subStatus);
     subredditElement.classList.remove("subreddit-" + prevStatus);
+    
+    if (prevStatus == "john-oliver") prevStatus = "John Oliver";
     
     if (subStatus == "private") {
         if (_new && displayAlert) {
@@ -170,7 +170,7 @@ function updateSubreddit(data, _new = false) {
         if (prevStatus != "private") dark++;
     } else if (subStatus == "john-oliver") {
         if (_new && displayAlert) {
-            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus.replaceAll("-", " ") + " → <strong>john oliver</strong>!";
+            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>John Oliver</strong>!";
             newStatusUpdate(statusUpdateText, "john-oliver", () => doScroll(subredditElement));
 
             audioSystem.playPrivate();
@@ -185,7 +185,7 @@ function updateSubreddit(data, _new = false) {
             audioSystem.playPublic();
         }
         
-        if (prevStatus != "john-oliver") dark--;
+        if (prevStatus != "John Oliver") dark--;
     }
     
     updateStatusText();
@@ -198,7 +198,8 @@ function genItem(name, status) {
     var _title = document.createElement("a");
     _item.className = "subreddit";
     _title.innerHTML = name;
-    _status.innerHTML = status.replaceAll("-", " ");
+    if (status == "john-oliver") _status.innerHTML = "John Oliver";
+    else _status.innerHTML = status.replaceAll("-", " ");
     _title.href = "https://old.reddit.com/" + name;
     _title.target = "_blank";
     _item.id = name;
