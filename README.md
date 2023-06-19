@@ -16,11 +16,21 @@ To run this fork, the following enviromnent variables must be set (please see [`
 ## Subreddits
 Reddark pulls the list of participating subreddits from the [r/ModCoord wiki](https://reddit.com/r/ModCoord/wiki/index). If you are the moderator of a sub that is going dark and that is not displayed on Reddark, you can [message the r/ModCoord moderators](https://reddit.com/message/compose?to=/r/ModCoord) to request that the subreddit is added to the wikipage.
 
+### John Oliver
+
+Reddark determines if a sub has "John Oliver" status by querying the list at [username-is-required/reddark-subinfo](https://github.com/username-is-required/reddark-subinfo), which is maintained manually with help from [a script](https://github.com/username-is-required/reddark-subinfo-update-checker).
+
+If there is an issue with the John Oliver-status of a subreddit (i.e. a sub missing John Oliver status when it should have it, or a sub incorrectly having the status when it should not), please raise an issue in [reddark-subinfo](https://github.com/username-is-required/reddark-subinfo)!
+
 ## Features
 If you have an idea for a feature you would like to see, please [submit an issue](https://github.com/username-is-required/reddark/issues/new?title=idea:%20[your%20idea%20here]) with the details!
 
 ## Bugs
-There are not any currently known bugs with this fork of Reddark. If you encounter an problem, please [submit an issue](https://github.com/username-is-required/reddark/issues/new?title=issue:%20[issue%20description%20here]) with the details, and it will be looked into.
+There is currently one known bug with this fork of Reddark:
+
+1) Ocasionally, something in the script (thought to be something in `./requests.js`) will hang, causing no more requests to the Reddit API to be sent. (This issue is being tracked in [#117](https://github.com/username-is-required/reddark/issues/117))
+
+If you encounter an problem that is not listed here, please [submit an issue](https://github.com/username-is-required/reddark/issues/new?title=issue:%20[issue%20description%20here]) with the details, and it will be looked into.
 
 ## Branch Structure
 There are two main branches that are used in this repository: `main` and `digital-ocean`. `main` is intended to be the 'front-page' of the repository (and the branch that can be easiest cloned to run locally), while `digital-ocean` is linked to the live version of the app and so contains some small differences that allow it to run on that platform.
