@@ -101,6 +101,8 @@ socket.on("updatenew", (data) => {
     var logstring = "";
     if (data.subData.status == "private" || data.subData.status == "restricted") {
         logstring += "NEW PRIVATE (o7): " + data.subData.name;
+    } else if (data.subData.status == "john-oliver") {
+        logstring += "New John Olivered Subreddit: " + data.subData.name;
     } else {
         logstring += ":/ new public: " + data.subData.name;
     }
