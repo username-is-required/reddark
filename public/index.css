@@ -197,14 +197,14 @@ a {
 }
 
 .subreddit-john-oliver {
-    color: #40a4ff !important;
-    text-shadow: 0px 0px 20px #40a4ff;
+    color: #e39ff6 !important;
+    text-shadow: 0px 0px 20px #e39ff6;
 }
 
 .subreddit-john-oliver p,
 .subreddit-john-oliver a {
     word-wrap: anywhere;
-    color: #40a4ff !important;
+    color: #e39ff6 !important;
 }
 
 
@@ -254,7 +254,7 @@ a {
 }
 
 .status-update-john-oliver {
-    --col: #40a4ff !important;
+    --col: #e39ff6 !important;
 }
 
 .button {
