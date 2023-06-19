@@ -150,7 +150,7 @@ function updateSubreddit(data, _new = false) {
     
     if (subStatus == "private") {
         if (_new && displayAlert) {
-            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>private</strong>";
+            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus.replaceAll("-", " ") + " → <strong>private</strong>";
             if (prevStatus != "restricted") statusUpdateText += "!";
             newStatusUpdate(statusUpdateText, "private", () => doScroll(subredditElement));
             
@@ -160,7 +160,7 @@ function updateSubreddit(data, _new = false) {
         if (prevStatus != "restricted") dark++;
     } else if (subStatus == "restricted") {
         if (_new && displayAlert) {
-            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>restricted</strong>";
+            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus.replaceAll("-", " ") + " → <strong>restricted</strong>";
             if (prevStatus != "private") statusUpdateText += "!";
             newStatusUpdate(statusUpdateText, "restricted", () => doScroll(subredditElement));
             
@@ -170,7 +170,7 @@ function updateSubreddit(data, _new = false) {
         if (prevStatus != "private") dark++;
     } else if (subStatus == "john-oliver") {
         if (_new && displayAlert) {
-            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>john oliver</strong>!";
+            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus.replaceAll("-", " ") + " → <strong>john oliver</strong>!";
             newStatusUpdate(statusUpdateText, "john-oliver", () => doScroll(subredditElement));
 
             audioSystem.playPrivate();
@@ -179,7 +179,7 @@ function updateSubreddit(data, _new = false) {
         if (prevStatus != "public") dark--;
     } else {
         if (_new && displayAlert) {
-            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>public</strong> :(";
+            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus.replaceAll("-", " ") + " → <strong>public</strong> :(";
             newStatusUpdate(statusUpdateText, "public", () => doScroll(subredditElement));
             
             audioSystem.playPublic();
