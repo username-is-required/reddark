@@ -55,7 +55,7 @@ function fetchValidJsonData(url) {
             data = JSON.parse(data);
             resolve(data);
         } catch (err) {
-            console.log("Request to Reddit errored (bad JSON) [will retry] - " + data);
+            console.log("Request errored (bad JSON) [will retry] - " + url);
             
             // now we wait for 5 seconds and try it again!
             // 'resolving' the promise with...uhh, recursion
@@ -73,6 +73,8 @@ var subreddits_src = {
 var subreddits = {};
 
 var subredditCount = 0;
+
+var johnOliverSubs = [];
 
 async function appendList(url) {
     var section = [];
@@ -307,7 +309,12 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 // update the subname to the one we have
                 // (this helps to prevent problems caused by differencss in capitalisation)
                 subName = subreddits[sectionIndex][subIndex]["name"];
-
+                
+                // if it's public, check if it's made the john oliver list
+                if (subStatus == "public" && johnOliverSubs.includes(subName.toLowerCase())) {
+                    subStatus = "john-oliver";
+                }
+                
                 // get the sub's currently recorded status
                 const knownSubStatus = subreddits[sectionIndex][subIndex]["status"];
                 var statusChanged = false;
@@ -317,6 +324,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                     case "private":
                         switch (knownSubStatus) {
                             case "public":
+                            case "john-oliver":
                                 // sub now private, app thinks it's something elss
                                 privateCount++; // deliberately no break after this line
                             case "restricted":
@@ -328,6 +336,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                     case "restricted":
                         switch (knownSubStatus) {
                             case "public":
+                            case "john-oliver":
                                 // sub now restricted, app thinks it's something elss
                                 privateCount++; // deliberately no break after this line
                             case "private":
@@ -337,14 +346,29 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                         }
                         break;
                     case "public":
-                        if (["private", "restricted"].includes(knownSubStatus)) {
-                            privateCount--;
-                            // flag a status change
-                            statusChanged = true;
+                        switch (knownSubStatus) {
+                            case "private":
+                            case "restricted":
+                                privateCount--;
+                            case "john-oliver":
+                                // flag a status change
+                                statusChanged = true;
+                                break;
+                        }
+                        break;
+                    case "john-oliver":
+                        switch (knownSubStatus) {
+                            case "private":
+                            case "restricted":
+                                privateCount--;
+                            case "public":
+                                // flag a status change
+                                statusChanged = true;
+                                break;
                         }
                         break;
                 }
-
+                
                 // if the sub's changed status, emit & log as such
                 if (statusChanged) {
                     // update the status in our list
@@ -413,6 +437,11 @@ function updateStatus() {
         var batchLoadRequests = [];
         checkCounter++;
         console.log("** Starting check " + checkCounter + " **");
+        
+        // fetch the current john oliver subs
+        var johnOliverRawData = await fetchValidJsonData("https://raw.githubusercontent.com/username-is-required/reddark-subinfo/main/john-oliver-subs.json");
+        johnOliverSubs = johnOliverRawData.johnOliverSubs;
+        
         for (let section in subreddits) {
             // batch subreddits together so we can  request data on them in a single api call
             var subredditBatch = [];
