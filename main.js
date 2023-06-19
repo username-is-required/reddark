@@ -295,7 +295,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 subNameBatch.splice(subIndexInBatch, 1);
                 
                 // check it has a valid `subreddit_type` property
-                const subStatus = subResponse["data"]["subreddit_type"];
+                let subStatus = subResponse["data"]["subreddit_type"];
 
                 if (!["private", "restricted", "public"].includes(subStatus)) {
                     throw new Error("status for [" + subName + "] not one of the expected values");
