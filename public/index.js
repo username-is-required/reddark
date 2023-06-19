@@ -133,6 +133,8 @@ function updateSubreddit(data, _new = false) {
         return;
     }
 
+    var prevStatus = "";
+
     if (subredditElement.classList.contains("subreddit-private")) {
         prevStatus = "private";
     } else if (subredditElement.classList.contains("subreddit-restricted")) {
