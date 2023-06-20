@@ -151,6 +151,7 @@ function updateSubreddit(data, _new = false) {
     subredditElement.classList.remove("subreddit-" + prevStatus);
     
     if (prevStatus == "john-oliver") prevStatus = "John Oliver";
+    else if (subStatus == "john-oliver") subStatus = "John Oliver";
     
     if (subStatus == "private") {
         if (_new && displayAlert) {
@@ -172,7 +173,7 @@ function updateSubreddit(data, _new = false) {
         }
         
         if (prevStatus != "private") dark++;
-    } else if (subStatus == "john-oliver") {
+    } else if (subStatus == "John Oliver") {
         if (_new && displayAlert) {
             var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>John Oliver</strong>!";
             newStatusUpdate(statusUpdateText, "john-oliver", () => doScroll(subredditElement));
