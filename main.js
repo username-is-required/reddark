@@ -234,7 +234,7 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
         if (config.commentInGithubIssueAfterRequestHangs) {
             const octokit = new Octokit({auth: config.githubAccessToken});
             await octokit.request("POST /repos/" + config.githubRepo + "/issues/" + config.githubIssue + "/comments", {
-                body: "`" + new Date().toISOString() + "`\n**[ALERT]** Reddark: request hung for 10 minutes (exiting process)\n\n---\n\n<sup>this comment was made by a bot, beep boop</sup>",
+                body: "`" + new Date().toISOString() + "`\n**[ALERT]** Reddark: request hung for 10 minutes\n\n**PROCESS HAS NOT EXITED, PLEASE REVIEW LOGS FOR ERRORS AND MANUALLY REDEPLOY**\n\n---\n\n<sup>this comment was made by a bot, beep boop</sup>",
                 headers: {
                     "X-GitHub-Api-Version": "2022-11-28"
                 }
@@ -242,11 +242,7 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
         }
         
         // console log because why not
-        console.log("request hung for 10min, exiting process");
-        
-        // kill the process
-        process.exit();
-    }, 600000);
+        console.log("request hung for 10min, logged on github issue");
     
     try {
         // send a request
