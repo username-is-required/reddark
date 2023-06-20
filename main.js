@@ -311,7 +311,10 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 }
 
                 // as a temporary stopgap treat "archived" as "public"
-                if (subStatus == "archived") subStatus = "public";
+                if (subStatus == "archived") {
+                    console.log("ARCHIVED STATUS: " + subName);
+                    subStatus = "public";
+                }
                 
                 // find this sub's index in the section array
                 const subIndex = subreddits[sectionIndex].findIndex(el => {
