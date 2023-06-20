@@ -306,9 +306,12 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 // check it has a valid `subreddit_type` property
                 let subStatus = subResponse["data"]["subreddit_type"];
 
-                if (!["private", "restricted", "public"].includes(subStatus)) {
+                if (!["private", "restricted", "public", "archived"].includes(subStatus)) {
                     throw new Error("status for [" + subName + "] not one of the expected values");
                 }
+
+                // as a temporary stopgap treat "archived" as "public"
+                if (subStatus == "archived") subStatus = "public";
                 
                 // find this sub's index in the section array
                 const subIndex = subreddits[sectionIndex].findIndex(el => {
