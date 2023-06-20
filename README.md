@@ -4,6 +4,12 @@ A website to watch subreddits go dark in realtime. Fork of the [repository by Ta
 ## Subreddits
 Reddark pulls the list of participating subreddits from the [r/ModCoord wiki](https://reddit.com/r/ModCoord/wiki/index). If you are the moderator of a sub that is going dark and that is not displayed on Reddark, you can [message the r/ModCoord moderators](https://reddit.com/message/compose?to=/r/ModCoord) to request that the subreddit is added to the wikipage.
 
+### John Oliver
+
+Reddark determines if a sub has "John Oliver" status by querying the list at [username-is-required/reddark-subinfo](https://github.com/username-is-required/reddark-subinfo), which is maintained manually with help from [a script](https://github.com/username-is-required/reddark-subinfo-update-checker).
+
+If there is an issue with the John Oliver-status of a subreddit (i.e. a sub missing John Oliver status when it should have it, or a sub incorrectly having the status when it should not), please raise an issue in [reddark-subinfo](https://github.com/username-is-required/reddark-subinfo)!
+
 ## Features
 If you have an idea for a feature you would like to see, please [submit an issue](https://github.com/username-is-required/reddark/issues/new?title=idea:%20[your%20idea%20here]) with the details!
 

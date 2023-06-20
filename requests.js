@@ -10,7 +10,8 @@ module.exports = {
                 timeout: 300000,
                 headers: {
                     "User-Agent": "Reddark (https://github.com/username-is-required/Reddark)",
-                    'Range': "bytes=0-50"
+                    //'Range': "bytes=0-50",
+                    "Cache-Control": "no-cache"
                 }
             };
 
