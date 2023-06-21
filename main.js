@@ -410,7 +410,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                         var logText = subName + ": " + knownSubStatus + "→" + subStatus + " (" + privateCount + ")";
                         
                         if (!displayAlert) logText += " (alert filtered)"; // mention in logs if alert filtered
-                        else if (subStatus == "mods-purged") subStatusChangeCounts[subName]++; // increment the count if the alert will be displayed
+                        else if (subStatus != "mods-purged") subStatusChangeCounts[subName]++; // increment the count if the alert will be displayed
                         
                         console.log(logText);
                     } else {
