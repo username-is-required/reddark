@@ -168,7 +168,8 @@ a {
 
 .subreddit-private,
 .subreddit-restricted,
-.subreddit-john-oliver {
+.subreddit-john-oliver,
+.subreddit-mods-purged {
     margin-bottom: 15px;
     font-weight: 900;
     position: relative;
