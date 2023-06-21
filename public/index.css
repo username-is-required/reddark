@@ -168,7 +168,8 @@ a {
 
 .subreddit-private,
 .subreddit-restricted,
-.subreddit-john-oliver {
+.subreddit-john-oliver,
+.subreddit-mods-purged {
     margin-bottom: 15px;
     font-weight: 900;
     position: relative;
@@ -207,6 +208,16 @@ a {
     color: #e39ff6 !important;
 }
 
+.subreddit-mods-purged p,
+.subreddit-mods-purged a {
+    word-wrap: anywhere;
+    color: #ff0000 !important;
+}
+
+.subreddit-mods-purged {
+    color: #ff0000 !important;
+    text-shadow: 0px 0px 20px #ff0000;
+}
 
 .hide-public .subreddit {
     display: none;
@@ -255,6 +266,10 @@ a {
 
 .status-update-john-oliver {
     --col: #e39ff6 !important;
+}
+
+.status-update-mods-purged {
+    --col: #ff0000 !important;
 }
 
 .button {

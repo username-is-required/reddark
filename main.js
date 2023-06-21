@@ -287,8 +287,14 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
             // check it has a valid `subreddit_type` property
             let subStatus = subResponse["data"]["subreddit_type"];
             
-            if (!["private", "restricted", "public"].includes(subStatus)) {
+            if (!["private", "restricted", "public", "archived"].includes(subStatus)) {
                 throw new Error("status for [" + subName + "] not one of the expected values");
+            }
+            
+            // assume 'archived' means 'mods purged'
+            if (subStatus == "archived") {
+                //console.log("ARCHIVED STATUS: " + subName);
+                subStatus = "mods-purged";
             }
             
             // find this sub's index in the section array
@@ -315,6 +321,7 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                     switch (knownSubStatus) {
                         case "public":
                         case "john-oliver":
+                        case "mods-purged":
                             // sub now private, app thinks it's something elss
                             privateCount++; // deliberately no break after this line
                         case "restricted":
@@ -327,6 +334,7 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                     switch (knownSubStatus) {
                         case "public":
                         case "john-oliver":
+                        case "mods-purged":
                             // sub now restricted, app thinks it's something elss
                             privateCount++; // deliberately no break after this line
                         case "private":
@@ -341,6 +349,7 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                         case "restricted":
                             privateCount--;
                         case "john-oliver":
+                        case "mods-purged":
                             // flag a status change
                             statusChanged = true;
                             break;
@@ -352,7 +361,19 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                         case "restricted":
                             privateCount--;
                         case "public":
+                        case "mods-purged":
                             // flag a status change
+                            statusChanged = true;
+                            break;
+                    }
+                    break;
+                case "mods-purged":
+                    switch (knownSubStatus) {
+                        case "private":
+                        case "restricted":
+                            privateCount--;
+                        case "public":
+                        case "john-oliver":
                             statusChanged = true;
                             break;
                     }
@@ -366,7 +387,7 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 
                 if (firstCheck) {
                     // figure out if we should display an alert
-                    var displayAlert = (
+                    var displayAlert = subStatus == "mods-purged" || (
                         !filteredSubs.includes(subName.toLowerCase())
                         && subStatusChangeCounts[subName] < config.allowedHourlyStatusChanges
                     );
@@ -379,13 +400,14 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                     var logText = subName + ": " + knownSubStatus + "→" + subStatus + " (" + privateCount + ")";
                     
                     if (!displayAlert) logText += " (alert filtered)"; // mention in logs if alert filtered
-                    else subStatusChangeCounts[subName]++; // increment the count if the alert will be displayed
+                    else if (subStatus != "mods-purged") subStatusChangeCounts[subName]++; // increment the count if the alert will be displayed
                     
                     console.log(logText);
                 } else {
                     io.emit("update", {"subData": subreddits[sectionIndex][subIndex]});
                 }
-            }
+            } 
+            
         }
         
         // if there are any subs left in the batch array, we didn't get data for them
