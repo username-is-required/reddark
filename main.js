@@ -371,7 +371,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                             case "restricted":
                                 privateCount--;
                             case "public":
-                            case "mods-purged:
+                            case "mods-purged":
                                 // flag a status change
                                 statusChanged = true;
                                 break;
