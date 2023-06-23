@@ -118,7 +118,7 @@ async function appendList(url) {
         if (subInList) continue;
 
         // here? the sub needs adding damnit.
-        let subData = await fetchValidJsonData(johnOliverSub);
+        let subData = await fetchValidJsonData("https://reddit.com/" + johnOliverSub + ".json");
         try {
             var subMembers = subData.data.children[0].data.subreddit_subscribers;
         } catch (e) {
