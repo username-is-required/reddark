@@ -100,6 +100,52 @@ async function appendList(url) {
     }
     
     subreddits_src[sectionname] = section;
+    
+    // if there are any subs on the john oliver list that aren't on the modcoord list,
+    // we'll add them in manually
+    for (let johnOliverSub of johnOliverSubs) {
+        let subInList = false;
+        for (let section in subreddits_src) {
+            for (let sub of subreddits_src[section]) {
+                if (sub.toLowerCase() == johnOliverSub) {
+                    subInList = true;
+                    break;
+                }
+            }
+            if (subInList) break;
+        }
+
+        if (subInList) continue;
+
+        // here? the sub needs adding damnit.
+        let subData = await fetchValidJsonData(johnOliverSub);
+        try {
+            var subMembers = subData.data.children[0].data.subreddit_subscribers;
+        } catch (e) {
+            console.log(johnOliverSub + ": error getting subscribed count for johnoliver sub not in list");
+            continue;
+        }
+
+        let listSection = "";
+        
+        // lets hope modcoord dont change the headings anytime soon
+        if (subMembers > 40000000) listSection = "40+ million";
+        else if (subMembers > 30000000) listSection = "30+ million";
+        else if (subMembers > 20000000) listSection = "20+ million";
+        else if (subMembers > 10000000) listSection = "10+ million";
+        else if (subMembers > 5000000) listSection = "5+ million";
+        else if (subMembers > 1000000) listSection = "1+ million";
+        else if (subMembers > 500000) listSection = "500k+";
+        else if (subMembers > 250000) listSection = "250k+";
+        else if (subMembers > 100000) listSection = "100k+";
+        else if (subMembers > 50000) listSection = "50k+";
+        else if (subMembers > 5000) listSection = "5k+";
+        else if (subMembers > 1000) listSection = "1k+";
+        else listSection = "1k and below";
+
+        subreddits_src[listSection].push(johnOliverSub);
+        subreddits_src[listSection].sort((a,b) => a.localeCompare(b));
+    }
 }
 
 async function createList(previousList = {}) {
@@ -107,6 +153,7 @@ async function createList(previousList = {}) {
     await appendList("/r/ModCoord/wiki/index.json")
     
     console.log("grabbed subreddits");
+    
     //subreddits_src["30+ million:"].push("r/tanzatest")
 
     for (var section in subreddits_src) {
@@ -459,10 +506,6 @@ function updateStatus() {
         checkCounter++;
         console.log("** Starting check " + checkCounter + " **");
         
-        // fetch the current john oliver subs
-        var johnOliverRawData = await fetchValidJsonData("https://raw.githubusercontent.com/username-is-required/reddark-subinfo/main/john-oliver-subs.json");
-        johnOliverSubs = johnOliverRawData.johnOliverSubs;
-        
         for (let section in subreddits) {
             // batch subreddits together so we can  request data on them in a single api call
             var subredditBatch = [];
@@ -527,6 +570,10 @@ function updateStatus() {
 // the subreddits, then uses setTimeout to wait for the amount of
 // time specified in the config before the function is called again.
 async function continuouslyUpdate() {
+    //fetch the current john oliver subs
+    var johnOliverRawData = await fetchValidJsonData("https://raw.githubusercontent.com/username-is-required/reddark-subinfo/main/john-oliver-subs.json");
+    johnOliverSubs = johnOliverRawData.johnOliverSubs;
+    
     // do we need to refresh the list of participating subs?
     if (refreshSubredditList) {
         console.log("About to refresh the subreddit list");
