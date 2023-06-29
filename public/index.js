@@ -188,7 +188,7 @@ function updateSubreddit(data, _new = false) {
             audioSystem.playPrivate();
         }
 
-        if (prevStatus != "public" && prevStatus != "mods-purged") dark--;
+        if (prevStatus != "public" && prevStatus != "archived") dark--;
     } else if (subStatus == "archived") {
         if (_new && displayAlert) {
             var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus.replaceAll("-", " ") + " → <strong>archived</strong>";
@@ -206,7 +206,7 @@ function updateSubreddit(data, _new = false) {
             audioSystem.playPublic();
         }
         
-        if (prevStatus != "John Oliver" && prevStatus != "mods-purged") dark--;
+        if (prevStatus != "John Oliver" && prevStatus != "archived") dark--;
     }
     
     updateStatusText();
