@@ -104,7 +104,7 @@ socket.on("updatenew", (data) => {
     } else if (data.subData.status == "john-oliver") {
         logstring += "New John Olivered Subreddit: " + data.subData.name;
     } else if (data.subData.status == "mods-purged") {
-        logstring += "🚨 MODS PURGED: " + data.subData.name;
+        logstring += "🚨 ARCHIVED: " + data.subData.name;
     } else {
         logstring += ":/ new public: " + data.subData.name;
     }
