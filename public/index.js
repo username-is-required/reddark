@@ -104,7 +104,7 @@ socket.on("updatenew", (data) => {
     } else if (data.subData.status == "john-oliver") {
         logstring += "New John Olivered Subreddit: " + data.subData.name;
     } else if (data.subData.status == "mods-purged") {
-        logstring += "🚨 MODS PURGED: " + data.subData.name;
+        logstring += "🚨 ARCHIVED: " + data.subData.name;
     } else {
         logstring += ":/ new public: " + data.subData.name;
     }
@@ -155,7 +155,10 @@ function updateSubreddit(data, _new = false) {
     subredditElement.classList.remove("subreddit-" + prevStatus);
     
     if (prevStatus == "john-oliver") prevStatus = "John Oliver";
-    else if (subStatus == "john-oliver") subStatus = "John Oliver";
+    else if (prevStatus == "mods-purged") prevStatus = "archived";
+    
+    if (subStatus == "john-oliver") subStatus = "John Oliver";
+    else if (subStatus == "mods-purged") subStatus = "archived";
     
     if (subStatus == "private") {
         if (_new && displayAlert) {
@@ -185,10 +188,10 @@ function updateSubreddit(data, _new = false) {
             audioSystem.playPrivate();
         }
 
-        if (prevStatus != "public" && prevStatus != "mods-purged") dark--;
-    } else if (subStatus == "mods-purged") {
+        if (prevStatus != "public" && prevStatus != "archived") dark--;
+    } else if (subStatus == "archived") {
         if (_new && displayAlert) {
-            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus.replaceAll("-", " ") + " → <strong>mods purged</strong>";
+            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus.replaceAll("-", " ") + " → <strong>archived</strong>";
             newStatusUpdate(statusUpdateText, "mods-purged", () => doScroll(subredditElement));
             
             audioSystem.playPublic();
@@ -203,7 +206,7 @@ function updateSubreddit(data, _new = false) {
             audioSystem.playPublic();
         }
         
-        if (prevStatus != "John Oliver" && prevStatus != "mods-purged") dark--;
+        if (prevStatus != "John Oliver" && prevStatus != "archived") dark--;
     }
     
     updateStatusText();
@@ -217,6 +220,7 @@ function genItem(name, status) {
     _item.className = "subreddit";
     _title.innerHTML = name;
     if (status == "john-oliver") _status.innerHTML = "John Oliver";
+    else if (status == "mods-purged") _status.innerHTML = "archived";
     else _status.innerHTML = status.replaceAll("-", " ");
     _title.href = "https://old.reddit.com/" + name;
     _title.target = "_blank";
