@@ -169,7 +169,8 @@ a {
 .subreddit-private,
 .subreddit-restricted,
 .subreddit-john-oliver,
-.subreddit-mods-purged {
+.subreddit-mods-purged,
+.subreddit-banned {
     margin-bottom: 15px;
     font-weight: 900;
     position: relative;
@@ -209,12 +210,15 @@ a {
 }
 
 .subreddit-mods-purged p,
-.subreddit-mods-purged a {
+.subreddit-mods-purged a,
+.subreddit-banned p,
+.subreddit-banned a {
     word-wrap: anywhere;
     color: #ff0000 !important;
 }
 
-.subreddit-mods-purged {
+.subreddit-mods-purged,
+.subreddit-banned {
     color: #ff0000 !important;
     text-shadow: 0px 0px 20px #ff0000;
 }
@@ -268,7 +272,8 @@ a {
     --col: #e39ff6 !important;
 }
 
-.status-update-mods-purged {
+.status-update-mods-purged,
+.status-update-banned {
     --col: #ff0000 !important;
 }
 

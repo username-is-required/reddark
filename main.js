@@ -72,6 +72,8 @@ var subredditCount = 0;
 
 var johnOliverSubs = [];
 
+var bannedSubs = [];
+
 async function appendList(url) {
     var section = [];
     var sectionname = "";
@@ -319,6 +321,7 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
                 //console.log("ARCHIVED STATUS: " + subName);
                 subStatus = "mods-purged";
             }
+            // (ha its funny bc now i changed the client to just say 'archived') 
             
             // find this sub's index in the section array
             const subIndex = subreddits[sectionIndex].findIndex(el => {
@@ -329,82 +332,32 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
             // (this helps to prevent problems caused by differencss in capitalisation)
             subName = subreddits[sectionIndex][subIndex]["name"];
             
-            // if it's public, check if it's made the john oliver list
-            if (subStatus == "public" && johnOliverSubs.includes(subName.toLowerCase())) {
+            // check if it's banned
+            // if not, & it's public, check if it's made the john oliver list
+            if (bannedSubs.includes(subName.toLowerCase())) {
+                subStatus = "banned";
+            } else if (subStatus == "public" && johnOliverSubs.includes(subName.toLowerCase())) {
                 subStatus = "john-oliver";
             }
             
             // get the sub's currently recorded status
             const knownSubStatus = subreddits[sectionIndex][subIndex]["status"];
-            var statusChanged = false;
-            
-            // sub status logic
-            switch (subStatus) {
-                case "private":
-                    switch (knownSubStatus) {
-                        case "public":
-                        case "john-oliver":
-                        case "mods-purged":
-                            // sub now private, app thinks it's something elss
-                            privateCount++; // deliberately no break after this line
-                        case "restricted":
-                            // flag a status change
-                            statusChanged = true;
-                            break;
-                    }
-                    break;
-                case "restricted":
-                    switch (knownSubStatus) {
-                        case "public":
-                        case "john-oliver":
-                        case "mods-purged":
-                            // sub now restricted, app thinks it's something elss
-                            privateCount++; // deliberately no break after this line
-                        case "private":
-                            // flag a status change
-                            statusChanged = true;
-                            break;
-                    }
-                    break;
-                case "public":
-                    switch (knownSubStatus) {
-                        case "private":
-                        case "restricted":
-                            privateCount--;
-                        case "john-oliver":
-                        case "mods-purged":
-                            // flag a status change
-                            statusChanged = true;
-                            break;
-                    }
-                    break;
-                case "john-oliver":
-                    switch (knownSubStatus) {
-                        case "private":
-                        case "restricted":
-                            privateCount--;
-                        case "public":
-                        case "mods-purged":
-                            // flag a status change
-                            statusChanged = true;
-                            break;
-                    }
-                    break;
-                case "mods-purged":
-                    switch (knownSubStatus) {
-                        case "private":
-                        case "restricted":
-                            privateCount--;
-                        case "public":
-                        case "john-oliver":
-                            statusChanged = true;
-                            break;
-                    }
-                    break;
-            }
+
+            // have a list of 'dark statuses' -ie, statuses considered 'dark' for the purposes
+            // of the counter
+            const darkStatuses = ["private", "restricted", "mods-purged", "banned"];
+
             
             // if the sub's changed status, emit & log as such
-            if (statusChanged) {
+            if (subStatus != knownSubStatus) {
+                // if the sub isn't currently dark and is becoming dark, increment the counter
+                // if the sub is currently dark and is leaving the darkness, decrement the counter
+                if (darkStatuses.includes(subStatus) && !darkStatuses.includes(knownSubStatus)) {
+                    privateCount++;
+                } else if (!darkStatuses.includes(subStatus) && darkStatuses.includes(knownSubStatus)) {
+                    privateCount--;
+                }
+                
                 // update the status in our list
                 subreddits[sectionIndex][subIndex]["status"] = subStatus;
                 
@@ -533,6 +486,10 @@ async function continuouslyUpdate() {
     //fetch the current john oliver subs
     var johnOliverRawData = await fetchValidJsonData("https://raw.githubusercontent.com/username-is-required/reddark-subinfo/main/john-oliver-subs.json");
     johnOliverSubs = johnOliverRawData.johnOliverSubs;
+
+    // fetch the current banned subs
+    var bannedSubsRawData = await fetchValidJsonData("https://raw.githubusercontent.com/username-is-required/reddark-subinfo/main/banned-subs.json");
+    bannedSubs = bannedSubsRawData.bannedSubs;
     
     // do we need to refresh the list of participating subs?
     if (refreshSubredditList) {
