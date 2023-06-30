@@ -102,7 +102,7 @@ socket.on("updatenew", (data) => {
     if (data.subData.status == "private" || data.subData.status == "restricted") {
         logstring += "NEW PRIVATE/RESTRICTED SUB (o7): " + data.subData.name;
     } else if (data.subData.status == "banned") {
-        logstring += "SUB ON LIST BANNED BY REDDIT: " + data.subData.name;
+        logstring += "SUB BANNED BY REDDIT: " + data.subData.name;
     } else if (data.subData.status == "john-oliver") {
         logstring += "New John Olivered Subreddit: " + data.subData.name;
     } else if (data.subData.status == "mods-purged") {
