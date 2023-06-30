@@ -255,7 +255,7 @@ function fillSubredditsList(data) {
         var sectionGrid = Object.assign(document.createElement("div"), { "classList": "section-grid" })
         for (var subreddit of data[section]) {
             amount++;
-            if (subreddit.status == "private" || subreddit.status == "restricted") {
+            if (subreddit.status == "private" || subreddit.status == "restricted" || subreddit.status == "mods-purged" || subreddit.status == "banned") {
                 dark++;
             }
             sectionGrid.appendChild(genItem(subreddit.name, subreddit.status));
