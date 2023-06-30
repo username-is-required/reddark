@@ -100,7 +100,7 @@ socket.on('disconnect', function () {
 socket.on("updatenew", (data) => {
     var logstring = "";
     if (data.subData.status == "private" || data.subData.status == "restricted") {
-        logstring += "NEW DARK SUB (o7): " + data.subData.name;
+        logstring += "NEW PRIVATE/RESTRICTED SUB (o7): " + data.subData.name;
     } else if (data.subData.status == "banned") {
         logstring += "SUB ON LIST BANNED BY REDDIT: " + data.subData.name;
     } else if (data.subData.status == "john-oliver") {
