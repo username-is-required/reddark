@@ -2,7 +2,6 @@ const express = require('express');
 const helmet = require('helmet');
 const http = require('http');
 const { Server } = require("socket.io");
-const { Octokit } = require("@octokit/core");
 
 var request = require("./requests.js");
 var config = require("./config.js");
@@ -224,32 +223,9 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
     const batchLoggingPrefix = "BATCH[start:" + subNameBatch[0] + "](" + subNameBatch.length + "): ";
     const subNameBatchPreserved = subNameBatch.slice();
     
-    // set a check to see if the request has hung
-    // if the callback hasn't been reached after 10 minutes, for now, just kill the process
-    // (and drop a note in a github issue if configured to)
-    // if it's running on digitalocean it should restart automatically (i believe)
-    // hopefully this stops happening oncd i figure out why requests occasionally hang
-    const hungRequestTimeout = setTimeout(async () => {
-        // if requested, drop a comment to github informing of the hung request
-        if (config.commentInGithubIssueAfterRequestHangs) {
-            const octokit = new Octokit({auth: config.githubAccessToken});
-            await octokit.request("POST /repos/" + config.githubRepo + "/issues/" + config.githubIssue + "/comments", {
-                body: "`" + new Date().toISOString() + "`\n**[ALERT]** Reddark: request hung for 10 minutes\n\n**PROCESS HAS NOT EXITED, PLEASE REVIEW LOGS FOR ERRORS AND MANUALLY REDEPLOY**\n\n---\n\n<sup>this comment was made by a bot, beep boop</sup>",
-                headers: {
-                    "X-GitHub-Api-Version": "2022-11-28"
-                }
-            });
-        }
-        
-        // console log because why not
-        console.log("request hung for 10min, logged on github issue");
-    
     try {
         // send a request
         let batchData = await request.httpsGet("/api/info.json?sr_name=" + subNameBatch.join(","));
-        
-        // clear the hung request timeout
-        clearTimeout(hungRequestTimeout);
         
         // check valid json
         try {
@@ -419,9 +395,6 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
         // if we get here, this batch should be sucessfully completed!
         return;
     } catch (err) {
-        // clear the hung request timeout
-        clearTimeout(hungRequestTimeout);
-        
         if (err.message == "timed out") {
             console.log(batchLoggingPrefix + "Request to Reddit timed out (will retry in 5s)");
         } else {
