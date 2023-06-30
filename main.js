@@ -72,6 +72,8 @@ var subredditCount = 0;
 
 var johnOliverSubs = [];
 
+var bannedSubs = [];
+
 async function appendList(url) {
     var section = [];
     var sectionname = "";
@@ -484,6 +486,10 @@ async function continuouslyUpdate() {
     //fetch the current john oliver subs
     var johnOliverRawData = await fetchValidJsonData("https://raw.githubusercontent.com/username-is-required/reddark-subinfo/main/john-oliver-subs.json");
     johnOliverSubs = johnOliverRawData.johnOliverSubs;
+
+    // fetch the current banned subs
+    var bannedSubsRawData = await fetchValidJsonData("https://raw.githubusercontent.com/username-is-required/reddark-subinfo/main/banned-subs.json");
+    bannedSubs = bannedSubsRawData.bannedSubs;
     
     // do we need to refresh the list of participating subs?
     if (refreshSubredditList) {
