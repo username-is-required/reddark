@@ -100,7 +100,9 @@ socket.on('disconnect', function () {
 socket.on("updatenew", (data) => {
     var logstring = "";
     if (data.subData.status == "private" || data.subData.status == "restricted") {
-        logstring += "NEW PRIVATE (o7): " + data.subData.name;
+        logstring += "NEW DARK SUB (o7): " + data.subData.name;
+    } else if (data.subData.status == "banned") {
+        logstring += "SUB ON LIST BANNED BY REDDIT: " + data.subData.name;
     } else if (data.subData.status == "john-oliver") {
         logstring += "New John Olivered Subreddit: " + data.subData.name;
     } else if (data.subData.status == "mods-purged") {
@@ -145,6 +147,8 @@ function updateSubreddit(data, _new = false) {
         prevStatus = "john-oliver";
     } else if (subredditElement.classList.contains("subreddit-mods-purged")) {
         prevStatus = "mods-purged";
+    } else if (subredditElement.classList.contains("subreddit-banned") {
+        prevStatus = "banned";
     } else {
         prevStatus = "public";
     }
@@ -159,6 +163,8 @@ function updateSubreddit(data, _new = false) {
     
     if (subStatus == "john-oliver") subStatus = "John Oliver";
     else if (subStatus == "mods-purged") subStatus = "archived";
+
+    var darkStatuses = ["private", "restricted", "archived", "banned"];
     
     if (subStatus == "private") {
         if (_new && displayAlert) {
@@ -168,8 +174,6 @@ function updateSubreddit(data, _new = false) {
             
             audioSystem.playPrivate();
         }
-        
-        if (prevStatus != "restricted") dark++;
     } else if (subStatus == "restricted") {
         if (_new && displayAlert) {
             var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus.replaceAll("-", " ") + " → <strong>restricted</strong>";
@@ -178,8 +182,6 @@ function updateSubreddit(data, _new = false) {
             
             audioSystem.playPrivate();
         }
-        
-        if (prevStatus != "private") dark++;
     } else if (subStatus == "John Oliver") {
         if (_new && displayAlert) {
             var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus + " → <strong>John Oliver</strong>!";
@@ -187,17 +189,18 @@ function updateSubreddit(data, _new = false) {
 
             audioSystem.playPrivate();
         }
-
-        if (prevStatus != "public" && prevStatus != "archived") dark--;
     } else if (subStatus == "archived") {
         if (_new && displayAlert) {
             var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus.replaceAll("-", " ") + " → <strong>archived</strong>";
             newStatusUpdate(statusUpdateText, "mods-purged", () => doScroll(subredditElement));
             
-            audioSystem.playPublic();
+            audioSystem.playPrivate();
         }
-        
-        if (prevStatus != "public" && prevStatus != "John Oliver") dark--;
+    } else if (subStatus == "banned") {
+        if (_new && displayAlert) {
+            var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus.replaceAll("-", " ") + " → <strong>banned</strong>";
+            newStatusUpdate(statusUpdateText, "banned", () => doScroll(subredditElement));
+        }
     } else {
         if (_new && displayAlert) {
             var statusUpdateText = "<strong>" + subName + "</strong><br>" + prevStatus.replaceAll("-", " ") + " → <strong>public</strong> :(";
@@ -205,8 +208,12 @@ function updateSubreddit(data, _new = false) {
             
             audioSystem.playPublic();
         }
-        
-        if (prevStatus != "John Oliver" && prevStatus != "archived") dark--;
+    }
+
+    if (darkStatuses.includes(subStatus) && !darkStatuses.includes(prevStatus)) {
+        dark++;
+    } else if (!darkStatuses.includes(subStatus) && darkStatuses.includes(prevStatus)) {
+        dark--;
     }
     
     updateStatusText();
