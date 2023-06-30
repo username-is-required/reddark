@@ -11,7 +11,6 @@ To run this fork, the following enviromnent variables must be set (please see [`
  - `URL`
  - `RELOAD_CLIENTS_FOLLOWING_DEPLOYMENT`
  - `ALLOWED_HOURLY_STATUS_CHANGES`
- - `COMMENT_IN_GITHUB_ISSUE_AFTER_REQUEST_HANGS`
 
 ## Subreddits
 Reddark pulls the list of participating subreddits from the [r/ModCoord wiki](https://reddit.com/r/ModCoord/wiki/index). If you are the moderator of a sub that is going dark and that is not displayed on Reddark, you can [message the r/ModCoord moderators](https://reddit.com/message/compose?to=/r/ModCoord) to request that the subreddit is added to the wikipage.
