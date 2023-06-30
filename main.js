@@ -334,7 +334,7 @@ async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
             
             // check if it's banned
             // if not, & it's public, check if it's made the john oliver list
-            if (bannedSubs.includes(subName.toLowerCase()) {
+            if (bannedSubs.includes(subName.toLowerCase())) {
                 subStatus = "banned";
             } else if (subStatus == "public" && johnOliverSubs.includes(subName.toLowerCase())) {
                 subStatus = "john-oliver";
