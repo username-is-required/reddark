@@ -285,7 +285,7 @@ function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
             if (config.commentInGithubIssueAfterRequestHangs) {
                 const octokit = new Octokit({auth: config.githubAccessToken});
                 await octokit.request("POST /repos/" + config.githubRepo + "/issues/" + config.githubIssue + "/comments", {
-                    body: "`" + new Date().toISOString() + "`\n**[ALERT]** Reddark: request hung for 10 minutes (exiting process)\n\n---\n\n<sup>this comment was made by a bot, beep boop</sup>",
+                    body: "`" + new Date().toISOString() + "`\n**[ALERT]** Reddark: request hung for 10 minutes (exiting process)\nrequest hung on " + batchLoggingPrefix + "\n\n---\n\n<sup>this comment was made by a bot, beep boop</sup>",
                     headers: {
                         "X-GitHub-Api-Version": "2022-11-28"
                     }
