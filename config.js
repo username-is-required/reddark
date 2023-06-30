@@ -24,18 +24,5 @@ module.exports = {
     // the number of status changes a sub can make in a given hour before having
     // the rest of its status changes for the rest of the hour auto-filtered from
     // being alerted to the client
-    allowedHourlyStatusChanges: process.env.ALLOWED_HOURLY_STATUS_CHANGES,
-    
-    // whether to comment in a github issue following a reddit api request hanging
-    // (if this is set to true, the three other github env variables also need to be specified
-    commentInGithubIssueAfterRequestHangs: (process.env.COMMENT_IN_GITHUB_ISSUE_AFTER_REQUEST_HANGS === "true"),
-    
-    // the github repository of the issue to leave a comment on
-    githubRepo: process.env.GITHUB_REPO,
-    
-    // the issue number of the issue to leave a comment on
-    githubIssue: process.env.GITHUB_ISSUE,
-    
-    // the github access token to be used to leave a comment on the specified issue
-    githubAccessToken: process.env.GITHUB_ACCESS_TOKEN
+    allowedHourlyStatusChanges: process.env.ALLOWED_HOURLY_STATUS_CHANGES
 }
