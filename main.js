@@ -2,7 +2,6 @@ const express = require('express');
 const helmet = require('helmet');
 const http = require('http');
 const { Server } = require("socket.io");
-const { Octokit } = require("@octokit/core");
 
 var request = require("./requests.js");
 var config = require("./config.js");
@@ -47,24 +46,21 @@ app.use(express.static('public'))
 
 // a function to fetch data from a url and validate that it is JSON
 // it is persistent and will keep trying until it gets valid JSON
-function fetchValidJsonData(url) {
-    return new Promise(async resolve => {
-        var data = await request.httpsGet(url);
+async function fetchValidJsonData(url) {
+    var data = await request.httpsGet(url);
+    
+    try {
+        data = JSON.parse(data);
+        return data;
+    } catch (err) {
+        console.log("Request errored (bad JSON) [will retry] - " + url);
         
-        try {
-            data = JSON.parse(data);
-            resolve(data);
-        } catch (err) {
-            console.log("Request errored (bad JSON) [will retry] - " + url);
-            
-            // now we wait for 5 seconds and try it again!
-            // 'resolving' the promise with...uhh, recursion
-            setTimeout(async () => {
-              data = await fetchValidJsonData(url);
-              resolve(data);
-            }, 5000);
-        }
-    });
+        // now we wait for 5 seconds and try it again!
+        // 'resolving' the implied promise with...uhh, recursion
+        await wait(5000);
+        data = await fetchValidJsonData(url);
+        return data;
+    }
 }
 
 var subreddits_src = {
@@ -80,11 +76,11 @@ async function appendList(url) {
     var section = [];
     var sectionname = "";
     
-    data = await fetchValidJsonData(url);
+    var data = await fetchValidJsonData(url);
     
-    text = data['data']['content_md'];
+    var text = data['data']['content_md'];
     //console.log(text);
-    lines = text.split("\n");
+    var lines = text.split("\n");
     for (var line of lines) {
         if (line.startsWith("##") && !line.includes("Please") && !line.includes("Combined") && !line.includes("Unique") && line.includes(":")) {
             if (section != []) subreddits_src[sectionname] = section;
@@ -150,7 +146,7 @@ async function appendList(url) {
 
 async function createList(previousList = {}) {
     // grabs the list of participating subs from the r/ModCoord wiki
-    await appendList("/r/ModCoord/wiki/index.json")
+    await appendList("/r/ModCoord/wiki/index.json");
     
     console.log("grabbed subreddits");
     
@@ -270,300 +266,264 @@ function initSubStatusChangeCounts(resetToZero = false) {
 // a helper function to 'load in' the statuses of a batch of subs
 // will call itself repeatedly until it has a **full valid response** for every sub
 // (this may or may not come back to haunt me)
-function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
+async function loadSubredditBatchStatus(subNameBatch, sectionIndex) {
     const batchLoggingPrefix = "BATCH[start:" + subNameBatch[0] + "](" + subNameBatch.length + "): ";
     const subNameBatchPreserved = subNameBatch.slice();
     
-    return new Promise( resolve => { // not even giving it the parameter to reject lol
-        // set a check to see if the request has hung
-        // if the callback hasn't been reached after 10 minutes, for now, just kill the process
-        // (and drop a note in a github issue if configured to)
-        // if it's running on digitalocean it should restart automatically (i believe)
-        // hopefully this stops happening oncd i figure out why requests occasionally hang
-        const hungRequestTimeout = setTimeout(async () => {
-            // if requested, drop a comment to github informing of the hung request
-            if (config.commentInGithubIssueAfterRequestHangs) {
-                const octokit = new Octokit({auth: config.githubAccessToken});
-                await octokit.request("POST /repos/" + config.githubRepo + "/issues/" + config.githubIssue + "/comments", {
-                    body: "`" + new Date().toISOString() + "`\n**[ALERT]** Reddark: request hung for 10 minutes (exiting process)\n\n---\n\n<sup>this comment was made by a bot, beep boop</sup>",
-                    headers: {
-                        "X-GitHub-Api-Version": "2022-11-28"
-                    }
-                });
-            }
-
-            // console log because why not
-            console.log("request hung for 10min, exiting process");
-            
-            // kill the process
-            process.exit();
-        }, 600000);
-        
-        
+    try {
         // send a request
-        const httpsReq = request.httpsGet("/api/info.json?sr_name=" + subNameBatch.join(",")).then(data => {
-            // clear the hung request timeout
-            clearTimeout(hungRequestTimeout);
+        let batchData = await request.httpsGet("/api/info.json?sr_name=" + subNameBatch.join(","));
+        
+        // check valid json
+        try {
+            batchData = JSON.parse(batchData);
+        } catch (e) {
+            throw new Error("bad JSON");
+        }
+        
+        if (typeof (batchData['message']) != "undefined" && batchData['error'] == 500) {
+            throw new Error("500");
+        }
+        
+        const subResponses = batchData["data"]["children"];
+        
+        // loop through the sub responses
+        for (let subResponse of subResponses) {
+            // simplify things a bit
+            const data = subResponse["data"];
             
+            // hello, what's your name, and is it one we were expecting
+            const subIndexInBatch = subNameBatch.findIndex(el => {
+                return el.toLowerCase() == data["display_name"].toLowerCase();
+            });
+            var subName = data["display_name_prefixed"];
             
-            // check valid json
-            try {
-                data = JSON.parse(data);
-            } catch (e) {
-                //console.log(batchLoggingPrefix + "Request to Reddit errored (bad JSON) (will retry in 5s)");
-                throw new Error("bad JSON");
+            if (subIndexInBatch == -1) {
+                // why the hell do we have a sub we didn't request
+                throw new Error("unexpected sub [" + subName + "] in batch response");
             }
             
-            if (typeof (data['message']) != "undefined" && data['error'] == 500) {
-                //console.log(batchLoggingPrefix + "Request to Reddit errored (500) (will retry in 5s) - " + data);
-                throw new Error("500");
-            }
-
-            const subResponses = data["data"]["children"];
+            // remove the sub name from the batch array
+            // as a way of keeping track of which subs we've received data for
+            subNameBatch.splice(subIndexInBatch, 1);
             
-            // loop through the sub responses
-            for (let subResponse of subResponses) {
-                // simplify things a bit
-                const data = subResponse["data"];
-                
-                // hello, what's your name, and is it one we were expecting
-                const subIndexInBatch = subNameBatch.findIndex(el => {
-                    return el.toLowerCase() == data["display_name"].toLowerCase();
-                });
-                var subName = data["display_name_prefixed"];
-
-                if (subIndexInBatch == -1) {
-                    // why the hell do we have a sub we didn't request
-                    throw new Error("unexpected sub [" + subName + "] in batch response");
-                }
-
-                // remove the sub name from the batch array
-                // as a way of keeping track of which subs we've received data for
-                subNameBatch.splice(subIndexInBatch, 1);
-                
-                // check it has a valid `subreddit_type` property
-                let subStatus = subResponse["data"]["subreddit_type"];
-
-                if (!["private", "restricted", "public", "archived"].includes(subStatus)) {
-                    throw new Error("status for [" + subName + "] not one of the expected values");
-                }
-
-                // assume 'archived' means 'mods purged'
-                if (subStatus == "archived") {
-                    //console.log("ARCHIVED STATUS: " + subName);
-                    subStatus = "mods-purged";
-                }
-                
-                // find this sub's index in the section array
-                const subIndex = subreddits[sectionIndex].findIndex(el => {
-                    return el["name"].toLowerCase() == subName.toLowerCase();
-                });
-
-                // update the subname to the one we have
-                // (this helps to prevent problems caused by differencss in capitalisation)
-                subName = subreddits[sectionIndex][subIndex]["name"];
-                
-                // if it's public, check if it's made the john oliver list
-                if (subStatus == "public" && johnOliverSubs.includes(subName.toLowerCase())) {
-                    subStatus = "john-oliver";
-                }
-                
-                // get the sub's currently recorded status
-                const knownSubStatus = subreddits[sectionIndex][subIndex]["status"];
-                var statusChanged = false;
-
-                // sub status logic
-                switch (subStatus) {
-                    case "private":
-                        switch (knownSubStatus) {
-                            case "public":
-                            case "john-oliver":
-                            case "mods-purged":
-                                // sub now private, app thinks it's something elss
-                                privateCount++; // deliberately no break after this line
-                            case "restricted":
-                                // flag a status change
-                                statusChanged = true;
-                                break;
-                        }
-                        break;
-                    case "restricted":
-                        switch (knownSubStatus) {
-                            case "public":
-                            case "john-oliver":
-                            case "mods-purged":
-                                // sub now restricted, app thinks it's something elss
-                                privateCount++; // deliberately no break after this line
-                            case "private":
-                                // flag a status change
-                                statusChanged = true;
-                                break;
-                        }
-                        break;
-                    case "public":
-                        switch (knownSubStatus) {
-                            case "private":
-                            case "restricted":
-                                privateCount--;
-                            case "john-oliver":
-                            case "mods-purged":
-                                // flag a status change
-                                statusChanged = true;
-                                break;
-                        }
-                        break;
-                    case "john-oliver":
-                        switch (knownSubStatus) {
-                            case "private":
-                            case "restricted":
-                                privateCount--;
-                            case "public":
-                            case "mods-purged":
-                                // flag a status change
-                                statusChanged = true;
-                                break;
-                        }
-                        break;
-                    case "mods-purged":
-                        switch (knownSubStatus) {
-                            case "private":
-                            case "restricted":
-                                privateCount--;
-                            case "public":
-                            case "john-oliver":
-                                statusChanged = true;
-                                break;
-                        }
-                        break;
-                }
-                
-                // if the sub's changed status, emit & log as such
-                if (statusChanged) {
-                    // update the status in our list
-                    subreddits[sectionIndex][subIndex]["status"] = subStatus;
-                 
-                    if (firstCheck) {
-                        // figure out if we should display an alert
-                        var displayAlert = subStatus == "mods-purged" || (
-                            !filteredSubs.includes(subName.toLowerCase())
-                            && subStatusChangeCounts[subName] < config.allowedHourlyStatusChanges
-                        );
-                        
-                        io.emit("updatenew", {
-                            "subData": subreddits[sectionIndex][subIndex],
-                            "displayAlert": displayAlert
-                        });
-
-                        var logText = subName + ": " + knownSubStatus + "→" + subStatus + " (" + privateCount + ")";
-                        
-                        if (!displayAlert) logText += " (alert filtered)"; // mention in logs if alert filtered
-                        else if (subStatus != "mods-purged") subStatusChangeCounts[subName]++; // increment the count if the alert will be displayed
-                        
-                        console.log(logText);
-                    } else {
-                        io.emit("update", {"subData": subreddits[sectionIndex][subIndex]});
+            // check it has a valid `subreddit_type` property
+            let subStatus = subResponse["data"]["subreddit_type"];
+            
+            if (!["private", "restricted", "public", "archived"].includes(subStatus)) {
+                throw new Error("status for [" + subName + "] not one of the expected values");
+            }
+            
+            // assume 'archived' means 'mods purged'
+            if (subStatus == "archived") {
+                //console.log("ARCHIVED STATUS: " + subName);
+                subStatus = "mods-purged";
+            }
+            
+            // find this sub's index in the section array
+            const subIndex = subreddits[sectionIndex].findIndex(el => {
+                return el["name"].toLowerCase() == subName.toLowerCase();
+            });
+            
+            // update the subname to the one we have
+            // (this helps to prevent problems caused by differencss in capitalisation)
+            subName = subreddits[sectionIndex][subIndex]["name"];
+            
+            // if it's public, check if it's made the john oliver list
+            if (subStatus == "public" && johnOliverSubs.includes(subName.toLowerCase())) {
+                subStatus = "john-oliver";
+            }
+            
+            // get the sub's currently recorded status
+            const knownSubStatus = subreddits[sectionIndex][subIndex]["status"];
+            var statusChanged = false;
+            
+            // sub status logic
+            switch (subStatus) {
+                case "private":
+                    switch (knownSubStatus) {
+                        case "public":
+                        case "john-oliver":
+                        case "mods-purged":
+                            // sub now private, app thinks it's something elss
+                            privateCount++; // deliberately no break after this line
+                        case "restricted":
+                            // flag a status change
+                            statusChanged = true;
+                            break;
                     }
+                    break;
+                case "restricted":
+                    switch (knownSubStatus) {
+                        case "public":
+                        case "john-oliver":
+                        case "mods-purged":
+                            // sub now restricted, app thinks it's something elss
+                            privateCount++; // deliberately no break after this line
+                        case "private":
+                            // flag a status change
+                            statusChanged = true;
+                            break;
+                    }
+                    break;
+                case "public":
+                    switch (knownSubStatus) {
+                        case "private":
+                        case "restricted":
+                            privateCount--;
+                        case "john-oliver":
+                        case "mods-purged":
+                            // flag a status change
+                            statusChanged = true;
+                            break;
+                    }
+                    break;
+                case "john-oliver":
+                    switch (knownSubStatus) {
+                        case "private":
+                        case "restricted":
+                            privateCount--;
+                        case "public":
+                        case "mods-purged":
+                            // flag a status change
+                            statusChanged = true;
+                            break;
+                    }
+                    break;
+                case "mods-purged":
+                    switch (knownSubStatus) {
+                        case "private":
+                        case "restricted":
+                            privateCount--;
+                        case "public":
+                        case "john-oliver":
+                            statusChanged = true;
+                            break;
+                    }
+                    break;
+            }
+            
+            // if the sub's changed status, emit & log as such
+            if (statusChanged) {
+                // update the status in our list
+                subreddits[sectionIndex][subIndex]["status"] = subStatus;
+                
+                if (firstCheck) {
+                    // figure out if we should display an alert
+                    var displayAlert = subStatus == "mods-purged" || (
+                        !filteredSubs.includes(subName.toLowerCase())
+                        && subStatusChangeCounts[subName] < config.allowedHourlyStatusChanges
+                    );
+                    
+                    io.emit("updatenew", {
+                        "subData": subreddits[sectionIndex][subIndex],
+                        "displayAlert": displayAlert
+                    });
+                    
+                    var logText = subName + ": " + knownSubStatus + "→" + subStatus + " (" + privateCount + ")";
+                    
+                    if (!displayAlert) logText += " (alert filtered)"; // mention in logs if alert filtered
+                    else if (subStatus != "mods-purged") subStatusChangeCounts[subName]++; // increment the count if the alert will be displayed
+                    
+                    console.log(logText);
+                } else {
+                    io.emit("update", {"subData": subreddits[sectionIndex][subIndex]});
                 }
-            }
+            } 
             
-            // if there are any subs left in the batch array, we didn't get data for them
-            // and that's a problem
-            if (subNameBatch.length > 0) {
-                throw new Error("no data for " + subNameBatch.length + " subs: [" + subNameBatch.join(", ") + "]");
-            }
-
-            // if we get here, this batch should be sucessfully completed!
-            resolve();
-        }).catch(err => {
-            // clear the hung request timeout
-            clearTimeout(hungRequestTimeout);
-            
-            if (err.message == "timed out") {
-                console.log(batchLoggingPrefix + "Request to Reddit timed out (will retry in 5s)");
-            } else {
-                console.log(batchLoggingPrefix + "Request to Reddit errored (will retry in 5s) - " + err);
-            }
-            
-            // try again after 5s
-            setTimeout(async () => {
-                const result = await loadSubredditBatchStatus(subNameBatchPreserved, sectionIndex);
-                resolve(result);
-            }, 5000);
-        })
-    });
+        }
+        
+        // if there are any subs left in the batch array, we didn't get data for them
+        // and that's a problem
+        if (subNameBatch.length > 0) {
+            throw new Error("no data for " + subNameBatch.length + " subs: [" + subNameBatch.join(", ") + "]");
+        }
+        
+        // if we get here, this batch should be sucessfully completed!
+        return;
+    } catch (err) {
+        if (err.message == "timed out") {
+            console.log(batchLoggingPrefix + "Request to Reddit timed out (will retry in 5s)");
+        } else {
+            console.log(batchLoggingPrefix + "Request to Reddit errored (will retry in 5s) - " + err);
+        }
+        
+        // try again after 5s
+        await wait(5000);
+        let result = await loadSubredditBatchStatus(subNameBatchPreserved, sectionIndex);
+        return result;
+    }
 }
 
 var checkCounter = 0;
 
-function updateStatus() {
-    return new Promise(async (resolve, reject) => {
-        // the delay (in ms) between sending off requests to reddit
-        // aka the anti-rate-limiter
-        // (probably also the anti-server-crasher tbf)
-        var delayBetweenRequests = config.intervalBetweenRequests;
+async function updateStatus() {
+    // the delay (in ms) between sending off requests to reddit
+    // aka the anti-rate-limiter
+    // (probably also the anti-server-crasher tbf)
+    var delayBetweenRequests = config.intervalBetweenRequests;
+    
+    var batchLoadRequests = [];
+    checkCounter++;
+    console.log("** Starting check " + checkCounter + " **");
+    
+    for (let section in subreddits) {
+        // batch subreddits together so we can  request data on them in a single api call
+        var subredditBatch = [];
         
-        var batchLoadRequests = [];
-        checkCounter++;
-        console.log("** Starting check " + checkCounter + " **");
-        
-        for (let section in subreddits) {
-            // batch subreddits together so we can  request data on them in a single api call
-            var subredditBatch = [];
+        for (let subIndex in subreddits[section]) {
+            subredditBatch.push(subreddits[section][subIndex].name.substring(2));
             
-            for (let subIndex in subreddits[section]) {
-                subredditBatch.push(subreddits[section][subIndex].name.substring(2));
+            // if the batch is full, or the section is complete
+            if (subredditBatch.length == 100 || subIndex == subreddits[section].length - 1) {
+                // gets the batch loading
+                const batchLoadPromise = loadSubredditBatchStatus(subredditBatch, section);
                 
-                // if the batch is full, or the section is complete
-                if (subredditBatch.length == 100 || subIndex == subreddits[section].length - 1) {
-                    // gets the batch loading
-                    const batchLoadPromise = loadSubredditBatchStatus(subredditBatch, section);
-
-                    // empty the current batch
-                    subredditBatch = [];
-
-                    batchLoadRequests.push(batchLoadPromise);
+                // empty the current batch
+                subredditBatch = [];
                 
-                    // wait between requests
-                    await wait(delayBetweenRequests);
-                }
+                batchLoadRequests.push(batchLoadPromise);
+                
+                // wait between requests
+                await wait(delayBetweenRequests);
             }
         }
-
-        // wait for them all to complete
-        await Promise.all(batchLoadRequests);
-        
-        console.log("All batched requests for check " + checkCounter + " complete");
-        console.log(config.updateInterval + "ms until next check");
-        
-        // all requests have now either been completed or errored
-        if (!firstCheck) {
-            // emit the reload signal if the config instructs
-            // to reload clients following deployment
-            if (config.reloadClientsFollowingDeployment) {
-                console.log("Client reload flag set, emitting reload signal in 20s");
-                setTimeout(() => {
-                    console.log("Emitting client reload signal");
-                    io.emit("reload");
-                }, 20000);
-            }
-            
-            io.emit("subreddits", subreddits);
-            firstCheck = true;
+    }
+    
+    // wait for them all to complete
+    await Promise.all(batchLoadRequests);
+    
+    console.log("All batched requests for check " + checkCounter + " complete");
+    console.log(config.updateInterval + "ms until next check");
+    
+    // all requests have now either been completed or errored
+    if (!firstCheck) {
+        // emit the reload signal if the config instructs
+        // to reload clients following deployment
+        if (config.reloadClientsFollowingDeployment) {
+            console.log("Client reload flag set, emitting reload signal in 20s");
+            wait(20000).then(() => {
+                console.log("Emitting client reload signal");
+                io.emit("reload");
+            });
         }
         
-        // this statement will trigger if this is the first call to updateStatus
-        // since the subreddit list refreshed
-        if (currentlyRefreshing) {
-            io.emit("subreddits-refreshed", subreddits);
-            console.log("Emitted the refreshed list of subreddits");
-            
-            // reset the flag
-            currentlyRefreshing = false;
-        }
+        io.emit("subreddits", subreddits);
+        firstCheck = true;
+    }
+    
+    // this statement will trigger if this is the first call to updateStatus
+    // since the subreddit list refreshed
+    if (currentlyRefreshing) {
+        io.emit("subreddits-refreshed", subreddits);
+        console.log("Emitted the refreshed list of subreddits");
         
-        // the updating is now complete, resolve the promise
-        resolve();
-    });
+        // reset the flag
+        currentlyRefreshing = false;
+    }
+    
+    // the updating is now complete, resolve the implied promise
+    return
 }
 
 // this function calls updateStatus to check/update the status of
