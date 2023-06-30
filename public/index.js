@@ -147,7 +147,7 @@ function updateSubreddit(data, _new = false) {
         prevStatus = "john-oliver";
     } else if (subredditElement.classList.contains("subreddit-mods-purged")) {
         prevStatus = "mods-purged";
-    } else if (subredditElement.classList.contains("subreddit-banned") {
+    } else if (subredditElement.classList.contains("subreddit-banned")) {
         prevStatus = "banned";
     } else {
         prevStatus = "public";
