@@ -13,3 +13,9 @@ const server = http.createServer(app);
 app.get('/', (req, res) => {
     return res.redirect(301, "https://reddark.untone.uk/");
 });
+
+
+server.listen(config.port, () => {
+    console.log('listening on *:' + config.port);
+});
+
