@@ -2,6 +2,8 @@ const express = require('express');
 const helmet = require('helmet');
 const http = require('http');
 
+var config = require("./config.js");
+
 // init a server
 const app = express();
 app.use(helmet.strictTransportSecurity({
