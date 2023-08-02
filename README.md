@@ -1,6 +1,17 @@
 # [Reddark (fork)](https://reddark.io/)
 A website to watch subreddits go dark in realtime. Fork of the [repository by Tanza3D](https://github.com/Tanza3D/reddark).
 
+## Running
+To run this fork, the following enviromnent variables must be set (please see [`config.js`](config.js)for an explanation of each variable):
+
+ - `PORT`
+ - `INTERVAL_BETWEEN_REQUESTS`
+ - `UPDATE_INTERVAL`
+ - `LIST_REFRESH_INTERVAL`
+ - `URL`
+ - `RELOAD_CLIENTS_FOLLOWING_DEPLOYMENT`
+ - `ALLOWED_HOURLY_STATUS_CHANGES`
+
 ## Subreddits
 Reddark pulls the list of participating subreddits from the [r/ModCoord wiki](https://reddit.com/r/ModCoord/wiki/index). If you are the moderator of a sub that is going dark and that is not displayed on Reddark, you can [message the r/ModCoord moderators](https://reddit.com/message/compose?to=/r/ModCoord) to request that the subreddit is added to the wikipage.
 
